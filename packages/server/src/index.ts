@@ -16,8 +16,14 @@ import { LoggedInUser } from './enterprise/Interface.Enterprise'
 import { initializeJwtCookieMiddleware, verifyToken, verifyTokenForBullMQDashboard } from './enterprise/middleware/passport'
 import { initAuthSecrets } from './enterprise/utils/authSecrets'
 import { trustEngineHeaders } from './middlewares/trustEngineHeaders'
+import { canvasBootstrap } from './middlewares/canvasBootstrap'
 
 const ENGINE_MODE = process.env.ACCELANCE_ENGINE_MODE === 'true'
+// In ENGINE_MODE, allow embedding from any origin so the Next.js shell can iframe the canvas.
+// Override only if not already set by the operator.
+if (ENGINE_MODE && !process.env.IFRAME_ORIGINS) {
+    process.env.IFRAME_ORIGINS = '*'
+}
 import { IdentityManager } from './IdentityManager'
 import { MODE, Platform } from './Interface'
 import { IMetricsProvider } from './Interface.Metrics'
@@ -377,9 +383,16 @@ export class App {
         this.app.use('/', express.static(uiBuildPath))
 
         // All other requests not handled will return React app
-        this.app.use((req: Request, res: Response) => {
-            res.sendFile(uiHtmlPath)
-        })
+        if (ENGINE_MODE) {
+            // Verify canvas token, seed localStorage bootstrap, serve index.html
+            this.app.use((req: Request, res: Response) => {
+                canvasBootstrap(req, res, uiHtmlPath)
+            })
+        } else {
+            this.app.use((req: Request, res: Response) => {
+                res.sendFile(uiHtmlPath)
+            })
+        }
 
         // Error handling
         this.app.use(errorHandlerMiddleware)

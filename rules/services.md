@@ -11,19 +11,9 @@
 **Key finding:** The current `packages/server/src/enterprise/` folder contains auth, org, workspace, RBAC code.
 This gets stripped out when moving to apps/engine. The NestJS api owns that instead.
 
-**Entities with workspaceId (confirmed):**
-
--   ChatFlow ✅ — has workspaceId column
-
-**Entities still to audit for workspaceId:**
-
--   Credential
--   Tool
--   DocumentStore
--   Variable
--   ApiKey
--   Assistant
--   CustomTemplate
+**workspaceId audit: COMPLETE (Step 03)**
+All 15 top-level entities have workspaceId. Child records (ChatMessage, DatasetRow, etc.)
+are scoped through parent FK. No migrations needed. See `rules/steps/step-03-workspace-id-audit.md`.
 
 ---
 
