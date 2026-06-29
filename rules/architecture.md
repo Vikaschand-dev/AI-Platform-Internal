@@ -4,12 +4,12 @@
 
 ## Service Map
 
-| Service | Tech               | Port  | Network  | Hosted          | Status      |
-| ------- | ------------------ | ----- | -------- | --------------- | ----------- |
-| gateway | Nginx              | :443  | public   | TBD (see below) | Not started |
-| web     | Next.js 15         | :3001 | internal | TBD             | Not started |
-| api     | NestJS 10          | :3000 | internal | TBD             | Not started |
-| engine  | Flowise (stripped) | :3002 | internal | TBD             | In progress |
+| Service | Tech               | Port  | Network  | Hosted          | Status   |
+| ------- | ------------------ | ----- | -------- | --------------- | -------- |
+| gateway | Nginx              | :80   | public   | TBD (see below) | Complete |
+| web     | Next.js 15         | :3001 | internal | TBD             | Complete |
+| api     | NestJS 10          | :3000 | internal | TBD             | Complete |
+| engine  | Flowise (stripped) | :3002 | internal | TBD             | Complete |
 
 ## Data Services
 

@@ -2,7 +2,7 @@
 
 ## apps/engine (Flowise)
 
-**Status:** Exists as `packages/server` — not yet moved to `apps/engine`
+**Status:** Complete (Steps 02–07) — ENGINE_MODE strips auth, Dockerfile added
 **Tech:** Express + TypeORM + LangChain
 **Port:** :3002 (target)
 **What it does:** AI flow execution only — chatflows, agentflows, 200+ LangChain nodes, vector search
@@ -19,7 +19,7 @@ are scoped through parent FK. No migrations needed. See `rules/steps/step-03-wor
 
 ## apps/api (NestJS)
 
-**Status:** Not created yet
+**Status:** Complete (Step 04)
 **Tech:** NestJS 10, TypeORM, Passport-JWT
 **Port:** :3000 (target)
 
@@ -38,7 +38,7 @@ are scoped through parent FK. No migrations needed. See `rules/steps/step-03-wor
 
 ## apps/web (Next.js)
 
-**Status:** Not created yet
+**Status:** Complete (Step 05)
 **Tech:** Next.js 15 (App Router)
 **Port:** :3001 (target)
 
@@ -56,15 +56,17 @@ are scoped through parent FK. No migrations needed. See `rules/steps/step-03-wor
 
 ## apps/gateway (Nginx)
 
-**Status:** Not created yet
+**Status:** Complete (Step 06)
 **Tech:** Nginx (nginx:alpine)
-**Port:** :443 public
+**Port:** :80 public (Cloudflare terminates TLS; direct TLS config commented in nginx.conf)
 
 **Routing rules:**
 
--   `/*` → web (:3001)
--   `/api/*` → api (:3000)
--   `/_engine/*` → blocked (internal only, never public)
+-   `/auth/*` → api (:3000) — rate limited 5 req/min per IP
+-   `/api/*` → api (:3000) — 300s timeout, buffering off for SSE
+-   `/_engine/*` → 403 blocked
+-   `/*` → web (:3001) — WebSocket upgrade for HMR
+-   `/nginx-health` → 200 OK (health check endpoint)
 
 ---
 

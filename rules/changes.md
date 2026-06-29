@@ -164,4 +164,114 @@ See `rules/steps/step-05-nextjs-web.md`
 **Next step:** Step 06 — Nginx gateway config
 See `rules/steps/step-06-nginx-gateway.md`
 
+## 2026-06-29 — Cloud DB Switch (amendment to Step 07)
+
+Both dev and production use cloud-managed PostgreSQL and Redis — no local containers needed.
+
+**Files changed:**
+
+-   `docker-compose.yml` — removed postgres + redis containers; all DB/Redis vars now come from `.env`
+-   `.env.example` — updated with full set of cloud connection vars (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_SSL, REDIS_URL, JWT_SECRET)
+-   `apps/api/src/app.module.ts` — ConfigModule now reads `../../.env` (repo root) when pnpm runs from `apps/api/`
+-   `apps/api/src/database/database.module.ts` — added `ssl` option controlled by `DB_SSL` env var (required for Azure/Supabase/Neon)
+
+**How to run locally (no Docker needed):**
+
+1. `cp .env.example .env` and fill in cloud credentials
+2. `pnpm install`
+3. `pnpm --filter @accelance/shared build`
+4. Three terminals:
+    - `pnpm --filter @accelance/api start:dev` (NestJS with watch)
+    - `ACCELANCE_ENGINE_MODE=true PORT=3002 pnpm --filter flowise start` (Engine — needs `packages/server/.env` too, see below)
+    - `pnpm --filter @accelance/web dev` (Next.js)
+
+**Engine local dev:** Flowise reads `packages/server/.env` on startup. Copy root `.env` vars there with Flowise naming:
+
+```
+DATABASE_TYPE=postgres
+DATABASE_HOST=<same as DB_HOST>
+DATABASE_PORT=5432
+DATABASE_USER=<same as DB_USER>
+DATABASE_PASSWORD=<same as DB_PASSWORD>
+DATABASE_NAME=flowise
+DATABASE_SSL=true
+JWT_SECRET=<same as JWT_SECRET>
+ACCELANCE_ENGINE_MODE=true
+PORT=3002
+```
+
+---
+
+## 2026-06-29 — Step 07: Docker Compose (COMPLETE)
+
+**Build result:** Config verified — `docker compose config` validates cleanly (Docker not running; build/run deferred to smoke test)
+
+**Files created:**
+
+-   `docker-compose.yml` — wires gateway, web, api, engine, postgres, redis
+-   `.env.example` — documents DB_PASSWORD and JWT_SECRET
+-   `apps/api/Dockerfile`
+-   `apps/web/Dockerfile`
+-   `apps/engine/Dockerfile`
+-   `rules/steps/step-07-docker-compose.md`
+
+**Files modified:**
+
+-   `.dockerignore` — added .git, .env, .next, .turbo, coverage, OS/editor noise
+-   `apps/gateway/nginx.conf` — added engine upstream + `/canvas/` proxy route
+-   `apps/api/src/main.ts` — added `/health` Express middleware (before JWT guard)
+-   `apps/web/src/app/canvas/[id]/page.tsx` — changed `||` to `??` for ENGINE_URL
+
+**Canvas URL fix:**
+`NEXT_PUBLIC_ENGINE_URL=""` baked into the web image at build time (set in web/Dockerfile).
+With `??` (not `||`), empty string stays empty → canvas iframe uses relative URL
+`/canvas/{id}?...` → nginx proxies to engine:3002 → engine validates `__ctkn` JWT.
+
+**Startup order:** postgres → api + engine (parallel) → web → gateway
+
+**Smoke test (requires Docker running):**
+
+```bash
+cp .env.example .env   # edit DB_PASSWORD and JWT_SECRET
+docker compose up --build
+curl http://localhost/nginx-health    # → OK
+curl http://localhost/health          # → {"status":"ok"}
+open http://localhost                 # → login page
+```
+
+**Next step:** Step 08 — Production hardening (pgvector init, DB migrations, env overrides)
+
+---
+
+## 2026-06-29 — Step 06: Nginx Gateway Config (COMPLETE)
+
+**Build result:** PASS — `nginx -t` validates clean (config syntax ok)
+
+**Files changed:**
+
+-   `apps/gateway/nginx.conf` — replaced Step 01 placeholder with production-ready config
+-   `rules/steps/step-06-nginx-gateway.md` — step plan
+-   `rules/services.md` — gateway, api, web statuses updated to Complete
+-   `rules/architecture.md` — service map statuses updated
+
+**Key decisions:**
+
+-   Port 80 primary (not 443): Cloudflare terminates TLS and forwards plain HTTP; same config works for local dev. Direct TLS block commented in nginx.conf for future use.
+-   `/auth/*` and `/api/*` both route to NestJS api. NestJS owns `/auth/*` natively and proxies `/api/v1/*` to engine internally.
+-   `proxy_buffering off` on `/api/` so LLM SSE streaming reaches the browser token-by-token.
+-   300s read/send timeout on `/api/` for slow LLM calls.
+-   Rate limit zone on `/auth/`: 5 req/min per IP, burst 20.
+-   WebSocket upgrade map in `/` location for Next.js HMR and future WebSocket features.
+
+**How to verify:**
+
+```bash
+docker run --rm \
+  -v "$(pwd)/apps/gateway/nginx.conf:/etc/nginx/nginx.conf:ro" \
+  nginx:alpine nginx -t
+```
+
+**Next step:** Step 07 — Docker Compose (wire gateway, api, web, engine, postgres, redis)
+See `rules/steps/step-07-docker-compose.md`
+
 <!-- Add new entries below this line, newest at the top -->
