@@ -87,7 +87,7 @@ const App = () => {
 
 export const defaultThemeConfig = {
     button: {
-        backgroundColor: '#3B81F6',
+        backgroundColor: '#7C3AED',
         right: 20,
         bottom: 20,
         size: 48,
@@ -121,9 +121,9 @@ export const defaultThemeConfig = {
     chatWindow: {
         showTitle: true,
         showAgentMessages: true,
-        title: 'Flowise Bot',
+        title: 'Accelance AI',
         titleAvatarSrc: 'https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/svg/google-messages.svg',
-        welcomeMessage: 'Hello! This is custom welcome message',
+        welcomeMessage: 'Hi! Welcome to Accelance AI. How can I help you today?',
         errorMessage: 'This is a custom error message',
         backgroundColor: '#ffffff',
         backgroundImage: 'enter image path or link',
@@ -170,8 +170,8 @@ export const defaultThemeConfig = {
         footer: {
             textColor: '#303235',
             text: 'Powered by',
-            company: 'Flowise',
-            companyLink: 'https://flowiseai.com'
+            company: 'Accelance',
+            companyLink: 'https://accelance.io'
         }
     }
 }
