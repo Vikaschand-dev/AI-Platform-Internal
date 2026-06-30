@@ -1,56 +1,68 @@
 # Known Issues
 
-When the app breaks, check here first.
+## #001 — column OrganizationUser.roleId does not exist
+
+**Symptom:** Server crashes with `column OrganizationUser.roleId does not exist`
+
+**Root cause:** `organization_user` table was created by the old custom NestJS code without `roleId`/`status` columns. Flowise enterprise entity expects them.
+
+**Fix:** Delete all enterprise tables (or use a fresh DB) so Flowise migrations recreate them from scratch.
+
+**Prevention:** Always use a fresh/clean database when switching to the Flowise enterprise migration chain.
 
 ---
 
-## Template
+## #002 — Login page appears at / on first start (expected)
 
-```
-## [DATE] — Issue Title
-**Service:** which service broke
-**Symptom:** what error or behavior you see
-**Root cause:** what was actually wrong
-**Fix:** what was changed to fix it
-**Files changed:** list of files
-```
+**Symptom:** `http://localhost:3002/` shows `/signin` login page
+
+**Root cause:** ENTERPRISE mode requires authentication — this is correct behavior.
+
+**First-time flow:**
+
+1. Go to `http://localhost:3002/register`
+2. Enter Organisation Name, Your Name, Email, Password
+3. Submit → org + admin user + default workspace created
+4. Redirected to login → sign in
 
 ---
 
-## 2026-06-25 — cookie-parser import in NestJS
+## #003 — Server starts on port 3000 instead of 3002
 
-**Service:** apps/api
-**Symptom:** `TS2349: This expression is not callable. Type 'typeof cookieParser' has no call signatures`
-**Root cause:** `import * as cookieParser from 'cookie-parser'` creates a namespace import in TypeScript strict mode — namespace imports can't be called as functions.
-**Fix:** Use `import cookieParser = require('cookie-parser')` instead
-**Files changed:** `apps/api/src/main.ts`
+**Symptom:** Port 3000 used even though `PORT=3002` in `.env`
 
-<!-- Add issues below as they are encountered -->
+**Root cause 1:** `.env` is in the wrong folder (must be `packages/server/.env`, not root)  
+**Root cause 2:** Flowise's `bin/run` script doesn't load `.env` before reading PORT
 
-## 2026-06-30 — Flowise enterprise migrations crash on shared tables
+**Fix:** Confirm `packages/server/.env` exists and has `PORT=3002`. Check that `dotenv` is initialized before the HTTP server starts in `packages/server/src/index.ts`.
 
-**Service:** packages/server (Flowise engine)
-**Symptom:** Engine starts but logs `Migration "..." failed` errors on startup; chatflows return 401
-**Root cause:** NestJS (apps/api) and the Flowise engine share the same PostgreSQL database.
-Flowise's enterprise migrations assume they own `user`, `organization`, `workspace` etc.,
-but NestJS created those tables with additional NOT NULL columns (`createdBy`, `updatedBy`).
-Three migrations crashed:
+---
 
--   `LinkWorkspaceId` — tried to ALTER non-existent `user.activeWorkspaceId`
--   `AddPersonalWorkspace` — INSERT into `workspace` failed on NOT NULL `createdBy`
--   `RefactorEnterpriseDatabase` — would have renamed and recreated `user`/`organization` (destroying NestJS auth data)
+## #004 — csstype TypeScript error in @flowiseai/agentflow build
 
-**Fix:** Three migrations made into no-ops with explanatory comments. See `rules/shared-database-entities.md` for the ownership rule and upgrade checklist.
-**Files changed:**
+**Symptom:** `Type '"auto"' is not assignable to type 'AlignmentBaseline | undefined'` in `NodeOutputHandles.tsx`
 
--   `packages/server/src/enterprise/database/migrations/postgres/1729130948686-LinkWorkspaceId.ts` — conditional `hasColumn()` check for `user.activeWorkspaceId`
--   `packages/server/src/enterprise/database/migrations/postgres/1734074497540-AddPersonalWorkspace.ts` — no-op
--   `packages/server/src/enterprise/database/migrations/postgres/1737076223692-RefactorEnterpriseDatabase.ts` — no-op
+**Root cause:** Two csstype versions installed (`3.1.3` wanted by agentflow, `3.2.3` pulled by other deps). TypeScript picks up the stricter `3.2.3` definitions.
 
-## 2026-06-30 — /api/v1/\* returns 401 (engine missing workspace headers)
+**Fix:** `"csstype": "3.1.3"` in `pnpm.overrides` in root `package.json` ✅ (already applied)
 
-**Service:** apps/web → apps/api → packages/server (Flowise engine)
-**Symptom:** Dashboard loads, user logged in, but `GET /api/v1/chatflows` returns 401 with `{ error: "Missing engine context headers" }`
-**Root cause:** `next.config.ts` rewrites do not reliably forward the `Authorization: Bearer` header from the browser to NestJS. Without the token, the JWT middleware on `/api/v1` had no user context, so the proxy callback never injected `x-workspace-id`/`x-tenant-id` into the upstream request. The engine's `trustEngineHeaders` middleware returned 401.
-**Fix:** Replaced the `next.config.ts` rewrite for `/api/v1/*` with an explicit Next.js Route Handler (`apps/web/src/app/api/v1/[...path]/route.ts`) that explicitly reads and forwards the `Authorization` header.
-**Files changed:** `apps/web/src/app/api/v1/[...path]/route.ts` (new), `apps/web/next.config.ts` (rewrite removed)
+---
+
+## #005 — "Role not found" after login
+
+**Symptom:** Login succeeds but immediately throws "Role not found"
+
+**Root cause:** The `role` table doesn't have the general roles seeded (`owner`, `member`, `personal workspace`). These are inserted by the `RefactorEnterpriseDatabase1737076223692` migration.
+
+**Fix:** Ensure all migrations ran completely. Check `migrations` table in PostgreSQL for any failed/missing entries. Drop enterprise tables and restart if needed.
+
+---
+
+## #006 — Database connection fails to Neon
+
+**Symptom:** `ECONNREFUSED` or SSL errors connecting to Neon PostgreSQL
+
+**Root cause 1:** `DATABASE_SSL=true` required but not set  
+**Root cause 2:** Neon requires direct connection URL (not pooler) for TypeORM migrations
+
+**Fix:** Confirm `DATABASE_SSL=true` in `packages/server/.env`. Use the direct host (`ep-lively-firefly-...`) not the pooler URL.
