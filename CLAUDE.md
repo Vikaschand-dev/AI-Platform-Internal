@@ -18,17 +18,17 @@ After making any change, update the relevant file in `rules/`.
 Accelance AI Platform — a multi-tenant AI agent platform built on a Flowise OSS fork.
 Root: `d:/Accelance AI Platform/AI-Platform-Internal/`
 
-Current state: **Flowise 3.1.2 monorepo** being restructured into a 5-service architecture.
-See `rules/architecture.md` for the full plan and current progress.
+Current state: **Flowise 3.1.2** running in enterprise mode with PostgreSQL on Neon.
+Enterprise auth is enabled via a `FLOWISE_PLATFORM=enterprise` env bypass (no license needed).
 
 ## Key Rules
 
 -   Never modify files outside this repo
 -   Always check `rules/changes.md` before starting work so you know what was already done
 -   When a service breaks, check `rules/known-issues.md` first
--   The `apps/engine` service (Flowise) should never do auth — auth lives in `apps/api` (NestJS)
--   All cross-service calls are HTTP only — services never import each other's code
+-   `FLOWISE_PLATFORM=enterprise` in `packages/server/.env` enables enterprise auth — do not remove this
+-   All auth flows use Flowise's built-in enterprise code — do not build custom auth
 -   Shared TypeScript types live in `packages/shared` only
--   **After every step or change: run build + test and record the result** — see `rules/workflow.md`
+-   **After every step or change: run build + test and record the result**
 -   **Save the full step plan to `rules/steps/` before touching any code**
--   **When you alter any entity/table in one service, immediately check the same table in the other service** — see `rules/shared-database-entities.md`
+-   **When you alter any entity/table, immediately check `rules/shared-database-entities.md`**
