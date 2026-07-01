@@ -4,6 +4,24 @@ All structural changes to the project are logged here in reverse chronological o
 
 ---
 
+## 2026-07-01 — Accelance Brand Theme
+
+**Goal:** Replace Flowise's default violet/purple theme with Accelance's blue+teal brand palette.
+
+**Changes:**
+
+-   `packages/ui/src/assets/scss/_themes-vars.module.scss` — Updated colour values only; no structural changes:
+    -   Primary (light mode): `#2196f3` → `#2563eb` (Accelance brand blue), full scale adjusted to blue-100/300/600/700/800
+    -   Secondary (light mode): replaced violet `#673ab7` with teal `#0d9488`, full scale adjusted to teal-100/300/600/700/800
+    -   Secondary (dark mode): replaced violet `#7c4dff` with teal `#2dd4bf`, surface tones adjusted to match
+
+**Key decisions:**
+
+-   Only the SCSS colour vars were changed — all MUI component overrides and palette mappings reference variables, so zero structural risk.
+-   Dark-mode primary (used for surface backgrounds, not brand colour) left untouched.
+
+---
+
 ## 2026-07-01 — Render Deployment
 
 **Goal:** Deploy Accelance AI Platform to Render as a web service.
