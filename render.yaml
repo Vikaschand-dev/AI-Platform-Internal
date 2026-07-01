@@ -1,0 +1,84 @@
+# Render deployment — Accelance AI Platform
+# Push this file to GitHub and connect the repo in Render dashboard.
+# Non-secret config is set here. Secrets must be set manually in:
+#   Render dashboard → your service → Environment
+
+services:
+    - type: web
+      name: accelance-ai-platform
+      runtime: node
+      region: oregon # options: oregon | frankfurt | singapore | ohio
+      plan: starter # starter ($7/mo, 512MB). Upgrade to standard ($25/mo, 2GB) for production.
+      buildCommand: npm install -g pnpm && pnpm install && pnpm build
+      startCommand: node packages/server/bin/run start
+      healthCheckPath: /api/v1/version
+
+      envVars:
+          # ── App ────────────────────────────────────────────────────────────────
+          - key: FLOWISE_PLATFORM
+            value: enterprise
+          - key: PORT
+            value: 3002
+          - key: NODE_VERSION
+            value: 24.15.0
+          - key: DISABLE_FLOWISE_TELEMETRY
+            value: true
+
+          # ── PostgreSQL ──────────────────────────────────────────────────────────
+          - key: DATABASE_TYPE
+            value: postgres
+          - key: DATABASE_PORT
+            value: 5432
+          - key: DATABASE_SSL
+            value: true
+
+          # ── Storage ─────────────────────────────────────────────────────────────
+          # /tmp is writable but ephemeral — uploaded files are lost on redeploy.
+          # For production, switch to STORAGE_TYPE=s3 and add S3_STORAGE_* vars.
+          - key: STORAGE_TYPE
+            value: local
+          - key: SECRETKEY_PATH
+            value: /tmp/.accelance
+          - key: BLOB_STORAGE_PATH
+            value: /tmp/.accelance/storage
+
+          # ── Secrets — set these in Render dashboard → Environment ───────────────
+          # Neon (Connection Details → Direct connection, not pooler)
+          - key: DATABASE_HOST
+            sync: false
+          - key: DATABASE_USER
+            sync: false
+          - key: DATABASE_PASSWORD
+            sync: false
+          - key: DATABASE_NAME
+            sync: false
+
+          # CRITICAL: prevents credential loss on redeploy (ephemeral filesystem).
+          # Generate: openssl rand -hex 16   (must be exactly 32 chars)
+          - key: FLOWISE_SECRETKEY_OVERWRITE
+            sync: false
+
+          # Generate each with: node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+          - key: JWT_AUTH_TOKEN_SECRET
+            sync: false
+          - key: JWT_REFRESH_TOKEN_SECRET
+            sync: false
+          - key: EXPRESS_SESSION_SECRET
+            sync: false
+
+          # Set to your Render URL after first deploy, e.g.:
+          # https://accelance-ai-platform.onrender.com
+          - key: APP_URL
+            sync: false
+
+          # SMTP for user invite emails (optional — invites work without it)
+          - key: SMTP_HOST
+            sync: false
+          - key: SMTP_PORT
+            sync: false
+          - key: SMTP_USER
+            sync: false
+          - key: SMTP_PASSWORD
+            sync: false
+          - key: SENDER_EMAIL
+            sync: false

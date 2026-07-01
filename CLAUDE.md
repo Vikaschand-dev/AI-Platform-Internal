@@ -21,6 +21,32 @@ Root: `d:/Accelance AI Platform/AI-Platform-Internal/`
 Current state: **Flowise 3.1.2** running in enterprise mode with PostgreSQL on Neon.
 Enterprise auth is enabled via a `FLOWISE_PLATFORM=enterprise` env bypass (no license needed).
 
+## Developer Setup (for new contributors)
+
+Quick path from clone to running:
+
+```bash
+# 1. Install Node 24 via nvm
+nvm install 24.15.0 && nvm use
+
+# 2. Install dependencies
+corepack enable && pnpm install
+
+# 3. Create and fill in the .env file
+cp packages/server/.env.example packages/server/.env
+# Edit packages/server/.env — fill in Neon DB credentials and generated secrets
+
+# 4. Build and run
+pnpm build
+cd packages/server && node bin/run start
+
+# 5. First time only: go to http://localhost:3002/register
+#    First registered user becomes the org admin (OWNER role)
+```
+
+See `rules/steps/01-enterprise-auth-setup.md` for full detail.
+For Neon DB: sign up at neon.tech → create project → Connection Details → **Direct connection** (not pooler).
+
 ## Key Rules
 
 -   Never modify files outside this repo

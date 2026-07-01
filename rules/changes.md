@@ -4,6 +4,26 @@ All structural changes to the project are logged here in reverse chronological o
 
 ---
 
+## 2026-07-01 — Render Deployment
+
+**Goal:** Deploy Accelance AI Platform to Render as a web service.
+
+**Changes:**
+
+-   `render.yaml` — Created at repo root. Render IaC config: Node 24.15.0, starter plan, build/start commands, non-secret env vars inline, secrets flagged `sync: false` for manual dashboard entry.
+-   `.env.example` (root) — Rewrote to remove deleted `apps/` references, align variable names with Flowise conventions.
+-   `packages/server/.env.example` — Prepended Accelance quickstart block (FLOWISE_PLATFORM=enterprise pre-set, PORT=3002, REQUIRED/OPTIONAL sections, secret generation commands).
+-   `CLAUDE.md` — Added Developer Setup section with 5-command quickstart.
+-   `rules/steps/02-render-deployment.md` — Step documentation.
+
+**Key decisions:**
+
+-   `STORAGE_TYPE=local` with `/tmp` path — files are ephemeral (lost on redeploy). Acceptable for MVP; switch to S3 for production.
+-   `FLOWISE_SECRETKEY_OVERWRITE` — secrets flag, must be set before first deploy to prevent credential decryption failure.
+-   `plan: starter` — free tier (512MB) will likely OOM when Flowise loads 200+ components. Starter ($7/mo) is minimum viable.
+
+---
+
 ## 2026-06-30 — Enterprise Auth Enable + PostgreSQL
 
 **Goal:** Enable org/workspace/user management with PostgreSQL (no Flowise license)
