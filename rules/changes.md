@@ -4,6 +4,28 @@ All structural changes to the project are logged here in reverse chronological o
 
 ---
 
+## 2026-07-02 — Email Template Accelance Theme
+
+**Goal:** Replace Flowise black/white email design with Accelance blue+teal brand theme across all 8 email templates (16 files total: `.hbs` + `.html`).
+
+**Changes to all 16 template files:**
+
+- Background color: `#151719` (Flowise dark) → `#0f1729` (Accelance deep navy)
+- `bgcolor="#000000"` → `bgcolor="#0f1729"`
+- Background image: removed Flowise S3 SVG reference / accelance.io placeholder URL → CSS gradient `linear-gradient(135deg, #0f1729 0%, #1a2e6b 60%, #0d4a44 100%)`
+- Logo image src: Flowise S3 PNG → `https://accelance.io/assets/logo-email-white.png` (HTML files; HBS files already had text logo from prior session)
+- CTA button gradient: `linear-gradient(to right, #673ab7, #2563eb)` (purple→blue) → `linear-gradient(to right, #2563eb, #0d9488)` (blue→teal)
+- CTA button background fallback: `#673ab7` / `#f9fafb` → `#2563eb` (Accelance primary blue)
+- Dark mode button override: `#ED00EB` (magenta) → `#0d9488` (Accelance teal)
+- SVG decorative gradient stop-color: `#5D5DFF` → `#2563eb`
+- Salutation: "The FlowiseAI Team" → "The Accelance Team"
+- Reset password body text: "FlowiseAI password/account" → "Accelance password/account"
+- Social links: Twitter `FlowiseAI` → `accelanceai`, GitHub `FlowiseAI/Flowise` → `accelance-io/platform`
+
+**Build result:** 7/7 tasks successful ✓
+
+---
+
 ## 2026-07-02 — Rebranding Phase 8: Docs & Legal
 
 **Goal:** Rename all Flowise references in README, docs, and legal files.
