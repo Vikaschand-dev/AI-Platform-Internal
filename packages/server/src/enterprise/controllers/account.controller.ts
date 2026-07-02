@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from 'express'
+﻿import { NextFunction, Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { QueryRunner } from 'typeorm'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { GeneralErrorMessage } from '../../utils/constants'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 import { emitEvent, TelemetryEventCategory, TelemetryEventResult } from '../../utils/telemetry'
@@ -125,12 +125,12 @@ export class AccountController {
         try {
             const { confirmationText } = req.body
             if (confirmationText !== 'permanently delete') {
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, 'Confirmation text must match "permanently delete"')
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, 'Confirmation text must match "permanently delete"')
             }
 
             queryRunner = getRunningExpressApp().AppDataSource.createQueryRunner()
             await queryRunner.connect()
-            if (!req.user || !req.ip) throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, GeneralErrorMessage.UNAUTHORIZED)
+            if (!req.user || !req.ip) throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, GeneralErrorMessage.UNAUTHORIZED)
 
             const accountService = new AccountService()
             await accountService.delete(queryRunner, req.user, req.ip)
@@ -149,7 +149,7 @@ export class AccountController {
                 ipAddress: req.ip,
                 result: TelemetryEventResult.FAILED,
                 metadata: {
-                    failureReason: error instanceof InternalFlowiseError ? error.message : 'internal_error'
+                    failureReason: error instanceof InternalAccelanceError ? error.message : 'internal_error'
                 }
             })
 

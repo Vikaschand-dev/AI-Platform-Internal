@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express'
+﻿import { Request, Response, NextFunction } from 'express'
 import _ from 'lodash'
 import nodesService from '../../services/nodes'
 import { ClientType, VALID_CLIENT_TYPES } from 'accelance-components'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { StatusCodes } from 'http-status-codes'
 import { getWorkspaceSearchOptionsFromReq } from '../../enterprise/utils/ControllerServiceUtils'
 
@@ -24,7 +24,7 @@ const getAllNodes = async (req: Request, res: Response, next: NextFunction) => {
 const getNodeByName = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.name) {
-            throw new InternalFlowiseError(StatusCodes.PRECONDITION_FAILED, `Error: nodesController.getNodeByName - name not provided!`)
+            throw new InternalAccelanceError(StatusCodes.PRECONDITION_FAILED, `Error: nodesController.getNodeByName - name not provided!`)
         }
         const apiResponse = await nodesService.getNodeByName(req.params.name, parseClientParam(req))
         return res.json(apiResponse)
@@ -36,7 +36,7 @@ const getNodeByName = async (req: Request, res: Response, next: NextFunction) =>
 const getNodesByCategory = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params.name === 'undefined' || req.params.name === '') {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: nodesController.getNodesByCategory - name not provided!`
             )
@@ -52,7 +52,10 @@ const getNodesByCategory = async (req: Request, res: Response, next: NextFunctio
 const getSingleNodeIcon = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.name) {
-            throw new InternalFlowiseError(StatusCodes.PRECONDITION_FAILED, `Error: nodesController.getSingleNodeIcon - name not provided!`)
+            throw new InternalAccelanceError(
+                StatusCodes.PRECONDITION_FAILED,
+                `Error: nodesController.getSingleNodeIcon - name not provided!`
+            )
         }
         const apiResponse = await nodesService.getSingleNodeIcon(req.params.name)
         return res.sendFile(apiResponse)
@@ -64,13 +67,13 @@ const getSingleNodeIcon = async (req: Request, res: Response, next: NextFunction
 const getSingleNodeAsyncOptions = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.body) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: nodesController.getSingleNodeAsyncOptions - body not provided!`
             )
         }
         if (typeof req.params === 'undefined' || !req.params.name) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: nodesController.getSingleNodeAsyncOptions - name not provided!`
             )
@@ -87,7 +90,7 @@ const getSingleNodeAsyncOptions = async (req: Request, res: Response, next: Next
 const executeCustomFunction = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.body) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: nodesController.executeCustomFunction - body not provided!`
             )

@@ -1,4 +1,4 @@
-import * as fs from 'fs'
+﻿import * as fs from 'fs'
 import { StatusCodes } from 'http-status-codes'
 import path from 'path'
 import { DeleteResult } from 'typeorm'
@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { CustomTemplate } from '../../database/entities/CustomTemplate'
 import { WorkspaceService } from '../../enterprise/services/workspace.service'
 import { getWorkspaceSearchOptions } from '../../enterprise/utils/ControllerServiceUtils'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
 import { IReactFlowEdge, IReactFlowNode } from '../../Interface'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
@@ -132,7 +132,7 @@ const getAllTemplates = async () => {
         const dbResponse = sortedTemplates
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: marketplacesService.getAllTemplates - ${getErrorMessage(error)}`
         )
@@ -144,7 +144,7 @@ const deleteCustomTemplate = async (templateId: string, workspaceId: string): Pr
         const appServer = getRunningExpressApp()
         return await appServer.AppDataSource.getRepository(CustomTemplate).delete({ id: templateId, workspaceId: workspaceId })
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: marketplacesService.deleteCustomTemplate - ${getErrorMessage(error)}`
         )
@@ -196,7 +196,7 @@ const getAllCustomTemplates = async (workspaceId?: string): Promise<any> => {
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: marketplacesService.getAllCustomTemplates - ${getErrorMessage(error)}`
         )
@@ -237,7 +237,7 @@ const saveCustomTemplate = async (body: any): Promise<any> => {
         const flowTemplate = await appServer.AppDataSource.getRepository(CustomTemplate).save(entity)
         return flowTemplate
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: marketplacesService.saveCustomTemplate - ${getErrorMessage(error)}`
         )

@@ -1,4 +1,4 @@
-import { EvaluationRunner, ICommonObject } from 'accelance-components'
+﻿import { EvaluationRunner, ICommonObject } from 'accelance-components'
 import { StatusCodes } from 'http-status-codes'
 import { In } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
@@ -11,7 +11,7 @@ import { DatasetRow } from '../../database/entities/DatasetRow'
 import { Evaluation } from '../../database/entities/Evaluation'
 import { EvaluationRun } from '../../database/entities/EvaluationRun'
 import { getWorkspaceSearchOptions } from '../../enterprise/utils/ControllerServiceUtils'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
 import { EvaluationStatus, IEvaluationResult } from '../../Interface'
 import { getAppVersion } from '../../utils'
@@ -59,7 +59,7 @@ const runAgain = async (id: string, baseURL: string, orgId: string, workspaceId:
         data.version = true
         return await createEvaluation(data, baseURL, orgId, workspaceId)
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: EvalsService.runAgain - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: EvalsService.runAgain - ${getErrorMessage(error)}`)
     }
 }
 
@@ -360,7 +360,7 @@ const createEvaluation = async (body: ICommonObject, baseURL: string, orgId: str
 
         return getAllEvaluations(body.workspaceId)
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: EvalsService.createEvaluation - ${getErrorMessage(error)}`
         )
@@ -442,7 +442,7 @@ const getAllEvaluations = async (workspaceId: string, page: number = -1, limit: 
             return returnResults
         }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: EvalsService.getAllEvaluations - ${getErrorMessage(error)}`
         )
@@ -459,17 +459,17 @@ const deleteEvaluation = async (id: string, activeWorkspaceId: string) => {
             workspaceId: activeWorkspaceId
         })
         if (!existing) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Evaluation ${id} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Evaluation ${id} not found`)
         }
         await appServer.AppDataSource.getRepository(EvaluationRun).delete({ evaluationId: id })
         await evaluationRepo.delete({ id, workspaceId: activeWorkspaceId })
         const results = await evaluationRepo.findBy(getWorkspaceSearchOptions(activeWorkspaceId))
         return results
     } catch (error) {
-        if (error instanceof InternalFlowiseError) {
+        if (error instanceof InternalAccelanceError) {
             throw error
         }
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: EvalsService.deleteEvaluation - ${getErrorMessage(error)}`
         )
@@ -580,7 +580,7 @@ const isOutdated = async (id: string, workspaceId: string) => {
         returnObj.isOutdated = isOutdated
         return returnObj
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: EvalsService.isOutdated - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: EvalsService.isOutdated - ${getErrorMessage(error)}`)
     }
 }
 
@@ -607,7 +607,7 @@ const getEvaluation = async (id: string, workspaceId: string) => {
             rows: items
         }
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: EvalsService.getEvaluation - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: EvalsService.getEvaluation - ${getErrorMessage(error)}`)
     }
 }
 
@@ -639,7 +639,7 @@ const getVersions = async (id: string, workspaceId: string) => {
             versions: returnResults
         }
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: EvalsService.getEvaluation - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: EvalsService.getEvaluation - ${getErrorMessage(error)}`)
     }
 }
 
@@ -678,7 +678,7 @@ const patchDeleteEvaluations = async (ids: string[] = [], activeWorkspaceId: str
         const results = await appServer.AppDataSource.getRepository(Evaluation).findBy(getWorkspaceSearchOptions(activeWorkspaceId))
         return results
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: EvalsService.patchDeleteEvaluations - ${getErrorMessage(error)}`
         )

@@ -1,4 +1,4 @@
-import { HttpStatusCode } from 'axios'
+﻿import { HttpStatusCode } from 'axios'
 import { RedisStore } from 'connect-redis'
 import express, { NextFunction, Request, Response } from 'express'
 import session from 'express-session'
@@ -7,7 +7,7 @@ import jwt, { JwtPayload, sign } from 'jsonwebtoken'
 import passport from 'passport'
 import { VerifiedCallback } from 'passport-jwt'
 import { v4 as uuidv4 } from 'uuid'
-import { InternalFlowiseError } from '../../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../../errors/internalAccelanceError'
 import { IdentityManager } from '../../../IdentityManager'
 import { Platform } from '../../../Interface'
 import { getRunningExpressApp } from '../../../utils/getRunningExpressApp'
@@ -141,7 +141,7 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
                         queryRunner
                     )
                     if (!organizationUser)
-                        throw new InternalFlowiseError(StatusCodes.NOT_FOUND, OrganizationUserErrorMessage.ORGANIZATION_USER_NOT_FOUND)
+                        throw new InternalAccelanceError(StatusCodes.NOT_FOUND, OrganizationUserErrorMessage.ORGANIZATION_USER_NOT_FOUND)
                     organizationUser.status = OrganizationUserStatus.ACTIVE
                     await workspaceUserService.updateWorkspaceUser(workspaceUser, queryRunner)
                     await organizationUserService.updateOrganizationUser(organizationUser)
@@ -159,7 +159,7 @@ export const initializeJwtCookieMiddleware = async (app: express.Application, id
                     let roleService = new RoleService()
                     const ownerRole = await roleService.readGeneralRoleByName(GeneralRole.OWNER, queryRunner)
                     const role = await roleService.readRoleById(workspaceUser.roleId, queryRunner)
-                    if (!role) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, RoleErrorMessage.ROLE_NOT_FOUND)
+                    if (!role) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, RoleErrorMessage.ROLE_NOT_FOUND)
 
                     const orgService = new OrganizationService()
                     const organization = await orgService.readOrganizationById(organizationUser.organizationId, queryRunner)

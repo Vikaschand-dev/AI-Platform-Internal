@@ -1,8 +1,8 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals'
+﻿import { describe, it, expect, jest, beforeEach } from '@jest/globals'
 import { Request } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { QueryRunner } from 'typeorm'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { GeneralErrorMessage } from '../../utils/constants'
 import { Workspace } from '../database/entities/workspace.entity'
 import { LoggedInUser } from '../Interface.Enterprise'
@@ -63,19 +63,19 @@ describe('tenantRequestGuards', () => {
 
     describe('getLoggedInUser', () => {
         it('throws UNAUTHORIZED when req.user is missing', () => {
-            expect(() => getLoggedInUser(makeRequest(undefined))).toThrow(InternalFlowiseError)
+            expect(() => getLoggedInUser(makeRequest(undefined))).toThrow(InternalAccelanceError)
             try {
                 getLoggedInUser(makeRequest(undefined))
             } catch (e) {
-                expect((e as InternalFlowiseError).statusCode).toBe(StatusCodes.UNAUTHORIZED)
-                expect((e as InternalFlowiseError).message).toBe(GeneralErrorMessage.UNAUTHORIZED)
+                expect((e as InternalAccelanceError).statusCode).toBe(StatusCodes.UNAUTHORIZED)
+                expect((e as InternalAccelanceError).message).toBe(GeneralErrorMessage.UNAUTHORIZED)
             }
         })
 
         it('throws when id, activeOrganizationId, or activeWorkspaceId is missing', () => {
-            expect(() => getLoggedInUser(makeRequest({ ...makeLoggedInUser(), id: '' }))).toThrow(InternalFlowiseError)
-            expect(() => getLoggedInUser(makeRequest({ ...makeLoggedInUser(), activeOrganizationId: '' }))).toThrow(InternalFlowiseError)
-            expect(() => getLoggedInUser(makeRequest({ ...makeLoggedInUser(), activeWorkspaceId: '' }))).toThrow(InternalFlowiseError)
+            expect(() => getLoggedInUser(makeRequest({ ...makeLoggedInUser(), id: '' }))).toThrow(InternalAccelanceError)
+            expect(() => getLoggedInUser(makeRequest({ ...makeLoggedInUser(), activeOrganizationId: '' }))).toThrow(InternalAccelanceError)
+            expect(() => getLoggedInUser(makeRequest({ ...makeLoggedInUser(), activeWorkspaceId: '' }))).toThrow(InternalAccelanceError)
         })
 
         it('returns user when session fields are present', () => {
@@ -95,7 +95,7 @@ describe('tenantRequestGuards', () => {
                 getActiveWorkspaceIdForRequest(
                     makeRequest({ id: 'u1', activeOrganizationId: 'org-1', activeWorkspaceId: '' } as Partial<LoggedInUser>)
                 )
-            ).toThrow(InternalFlowiseError)
+            ).toThrow(InternalAccelanceError)
         })
 
         it('returns workspace id for API-key-style user without id', () => {
@@ -117,7 +117,7 @@ describe('tenantRequestGuards', () => {
                         activeOrganizationId: undefined
                     } as Partial<LoggedInUser>)
                 )
-            ).toThrow(InternalFlowiseError)
+            ).toThrow(InternalAccelanceError)
 
             expect(() =>
                 getActiveWorkspaceIdForRequest(
@@ -126,7 +126,7 @@ describe('tenantRequestGuards', () => {
                         activeOrganizationId: 'org-1'
                     } as Partial<LoggedInUser>)
                 )
-            ).toThrow(InternalFlowiseError)
+            ).toThrow(InternalAccelanceError)
         })
     })
 
@@ -143,12 +143,12 @@ describe('tenantRequestGuards', () => {
         })
 
         it('throws FORBIDDEN when organizationId does not match', () => {
-            expect(() => assertQueryOrganizationMatchesActiveOrg(user, 'other-org')).toThrow(InternalFlowiseError)
+            expect(() => assertQueryOrganizationMatchesActiveOrg(user, 'other-org')).toThrow(InternalAccelanceError)
             try {
                 assertQueryOrganizationMatchesActiveOrg(user, 'other-org')
             } catch (e) {
-                expect((e as InternalFlowiseError).statusCode).toBe(StatusCodes.FORBIDDEN)
-                expect((e as InternalFlowiseError).message).toBe(GeneralErrorMessage.FORBIDDEN)
+                expect((e as InternalAccelanceError).statusCode).toBe(StatusCodes.FORBIDDEN)
+                expect((e as InternalAccelanceError).message).toBe(GeneralErrorMessage.FORBIDDEN)
             }
         })
     })
@@ -179,7 +179,7 @@ describe('tenantRequestGuards', () => {
                 isOrganizationAdmin: false,
                 assignedWorkspaces: []
             })
-            await expect(assertWorkspaceIdAccessibleToUser(user, 'ws-remote', makeQueryRunner())).rejects.toThrow(InternalFlowiseError)
+            await expect(assertWorkspaceIdAccessibleToUser(user, 'ws-remote', makeQueryRunner())).rejects.toThrow(InternalAccelanceError)
         })
 
         it('org admin: resolves when workspace belongs to active organization', async () => {

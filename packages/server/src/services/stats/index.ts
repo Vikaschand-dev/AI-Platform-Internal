@@ -1,10 +1,10 @@
-import { StatusCodes } from 'http-status-codes'
+﻿import { StatusCodes } from 'http-status-codes'
 import { Between, FindOptionsWhere, In, LessThanOrEqual, MoreThanOrEqual } from 'typeorm'
 import { ChatMessageRatingType, ChatType } from '../../Interface'
 import { ChatMessage } from '../../database/entities/ChatMessage'
 import { ChatMessageFeedback } from '../../database/entities/ChatMessageFeedback'
 import { ChatFlow } from '../../database/entities/ChatFlow'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 
@@ -19,7 +19,7 @@ const getChatflowStats = async (
 ): Promise<any> => {
     try {
         if (!activeWorkspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.UNAUTHORIZED,
                 `Error: statsService.getChatflowStats - activeWorkspaceId not provided!`
             )
@@ -31,7 +31,7 @@ const getChatflowStats = async (
             workspaceId: activeWorkspaceId
         })
         if (!chatflow)
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.FORBIDDEN,
                 `Error: statsService.getChatflowStats - chatflow ${chatflowid} not found in workspace!`
             )
@@ -123,7 +123,7 @@ const getChatflowStats = async (
             positiveFeedback: parseInt(statsRaw?.positiveFeedback ?? '0', 10)
         }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: statsService.getChatflowStats - ${getErrorMessage(error)}`
         )

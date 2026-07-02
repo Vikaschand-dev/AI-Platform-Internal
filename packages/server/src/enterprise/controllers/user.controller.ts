@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response } from 'express'
+﻿import { NextFunction, Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { GeneralErrorMessage } from '../../utils/constants'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 import { User } from '../database/entities/user.entity'
@@ -28,7 +28,7 @@ export class UserController {
 
             const sessionUser = req.user as LoggedInUser | undefined
             if (!sessionUser) {
-                throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, UserErrorMessage.USER_NOT_FOUND)
+                throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, UserErrorMessage.USER_NOT_FOUND)
             }
 
             const query = req.query as Partial<User>
@@ -38,21 +38,21 @@ export class UserController {
             if (query.id) {
                 await assertMayReadTargetUser(sessionUser, query.id, queryRunner)
                 user = await userService.readUserById(query.id, queryRunner)
-                if (!user) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+                if (!user) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
             } else if (query.email) {
                 const emailLc = (typeof query.email === 'string' ? query.email : '').trim().toLowerCase()
                 const selfEmail = sessionUser.email?.trim().toLowerCase()
                 if (!selfEmail || emailLc !== selfEmail) {
                     const byEmail = await userService.readUserByEmail(query.email, queryRunner)
-                    if (!byEmail) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+                    if (!byEmail) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
                     await assertMayReadTargetUser(sessionUser, byEmail.id, queryRunner)
                     user = byEmail
                 } else {
                     user = await userService.readUserByEmail(query.email, queryRunner)
-                    if (!user) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+                    if (!user) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
                 }
             } else {
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.UNHANDLED_EDGE_CASE)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.UNHANDLED_EDGE_CASE)
             }
 
             if (user) {
@@ -72,11 +72,11 @@ export class UserController {
         try {
             const currentUser = req.user
             if (!currentUser) {
-                throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, UserErrorMessage.USER_NOT_FOUND)
+                throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, UserErrorMessage.USER_NOT_FOUND)
             }
             const { id } = req.body
             if (currentUser.id !== id) {
-                throw new InternalFlowiseError(StatusCodes.FORBIDDEN, UserErrorMessage.USER_NOT_FOUND)
+                throw new InternalAccelanceError(StatusCodes.FORBIDDEN, UserErrorMessage.USER_NOT_FOUND)
             }
             const accountService = new AccountService()
             const result = await accountService.updateAuthenticatedUserProfile(currentUser.id, req.body, (userId, newEmail) =>

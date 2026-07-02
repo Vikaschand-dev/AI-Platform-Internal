@@ -1,5 +1,5 @@
-import { filterAllowedUploadMimeTypes, validateMimeTypeAndExtensionMatch } from 'accelance-components'
-import { InternalFlowiseError } from '../errors/internalFlowiseError'
+﻿import { filterAllowedUploadMimeTypes, validateMimeTypeAndExtensionMatch } from 'accelance-components'
+import { InternalAccelanceError } from '../errors/internalAccelanceError'
 import { StatusCodes } from 'http-status-codes'
 import { getErrorMessage } from '../errors/utils'
 
@@ -12,7 +12,7 @@ import { getErrorMessage } from '../errors/utils'
  *
  * @param {string} filename The original filename
  * @param {string} mimetype The declared MIME type
- * @throws {InternalFlowiseError} If validation fails, throws BAD_REQUEST error
+ * @throws {InternalAccelanceError} If validation fails, throws BAD_REQUEST error
  * @example
  * ```typescript
  * validateFileMimeTypeAndExtensionMatch(file.originalname, file.mimetype)
@@ -22,7 +22,7 @@ export function validateFileMimeTypeAndExtensionMatch(filename: string, mimetype
     try {
         validateMimeTypeAndExtensionMatch(filename, mimetype)
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, getErrorMessage(error))
+        throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, getErrorMessage(error))
     }
 }
 

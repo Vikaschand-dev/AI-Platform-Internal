@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express'
+﻿import { Request, Response, NextFunction } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import chatflowsService from '../../services/chatflows'
 import upsertHistoryService from '../../services/upsert-history'
 
@@ -8,14 +8,14 @@ const getAllUpsertHistory = async (req: Request, res: Response, next: NextFuncti
     try {
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: upsertHistoryController.getAllUpsertHistory - workspace ${workspaceId} not found!`
             )
         }
         const chatflowid = req.params?.id as string | undefined
         if (!chatflowid) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.BAD_REQUEST,
                 'Error: upsertHistoryController.getAllUpsertHistory - chatflow id is required!'
             )
@@ -36,7 +36,7 @@ const patchDeleteUpsertHistory = async (req: Request, res: Response, next: NextF
     try {
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: upsertHistoryController.patchDeleteUpsertHistory - workspace ${workspaceId} not found!`
             )

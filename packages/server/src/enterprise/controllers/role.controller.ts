@@ -1,9 +1,9 @@
-import { NextFunction, Request, Response } from 'express'
+﻿import { NextFunction, Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 import { Role } from '../database/entities/role.entity'
 import { RoleErrorMessage, RoleService } from '../services/role.service'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { GeneralErrorMessage } from '../../utils/constants'
 import { assertQueryOrganizationMatchesActiveOrg, getLoggedInUser } from '../utils/tenantRequestGuards'
 
@@ -34,17 +34,17 @@ export class RoleController {
             if (query.id) {
                 const oneRole = await roleService.readRoleById(query.id, queryRunner)
                 if (!oneRole) {
-                    throw new InternalFlowiseError(StatusCodes.NOT_FOUND, RoleErrorMessage.ROLE_NOT_FOUND)
+                    throw new InternalAccelanceError(StatusCodes.NOT_FOUND, RoleErrorMessage.ROLE_NOT_FOUND)
                 }
                 if (oneRole.organizationId != null) {
                     if (!user.activeOrganizationId || oneRole.organizationId !== user.activeOrganizationId) {
-                        throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+                        throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
                     }
                 }
                 role = oneRole
             } else if (query.organizationId) {
                 if (!user.activeOrganizationId || query.organizationId !== user.activeOrganizationId) {
-                    throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+                    throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
                 }
                 role = await roleService.readRoleByOrganizationId(query.organizationId, queryRunner)
             } else {
@@ -76,10 +76,10 @@ export class RoleController {
         try {
             const query = req.query as Partial<Role>
             if (!query.id) {
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, 'Role ID is required')
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, 'Role ID is required')
             }
             if (!query.organizationId) {
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, 'Organization ID is required')
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, 'Organization ID is required')
             }
             const roleService = new RoleService()
             const role = await roleService.deleteRole(query.organizationId, query.id)

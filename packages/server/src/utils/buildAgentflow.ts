@@ -1,4 +1,4 @@
-import { DataSource } from 'typeorm'
+﻿import { DataSource } from 'typeorm'
 import { v4 as uuidv4 } from 'uuid'
 import { cloneDeep, get } from 'lodash'
 import TurndownService from 'turndown'
@@ -61,7 +61,7 @@ import { Telemetry } from './telemetry'
 import { getWorkspaceSearchOptions } from '../enterprise/utils/ControllerServiceUtils'
 import { UsageCacheManager } from '../UsageCacheManager'
 import { generateTTSForResponseStream, shouldAutoPlayTTS } from './buildChatflow'
-import { InternalFlowiseError } from '../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../errors/internalAccelanceError'
 import { StatusCodes } from 'http-status-codes'
 
 interface IWaitingNode {
@@ -1603,13 +1603,13 @@ export const executeAgentFlow = async ({
     if (!isRecursive) {
         if (startInputType === 'webhookTrigger' && chatType !== ChatType.WEBHOOK) {
             const configuredMethod = ((startNode?.data?.inputs?.webhookMethod as string) || 'POST').toUpperCase()
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.BAD_REQUEST,
                 `This flow is configured as a Webhook Trigger. Call ${configuredMethod} /api/v1/webhook/${chatflowid} instead of the prediction API.`
             )
         }
         if (startInputType === 'scheduleInput' && chatType !== ChatType.SCHEDULED) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.BAD_REQUEST,
                 `This flow is configured as a Scheduled Trigger. It is fired by the scheduler and cannot be invoked via the API. Change the Start node Input Type to Chat or Form to call it from the prediction API.`
             )

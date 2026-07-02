@@ -1,11 +1,11 @@
-import { cloneDeep, omit } from 'lodash'
+﻿import { cloneDeep, omit } from 'lodash'
 import { StatusCodes } from 'http-status-codes'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 import { INodeData, MODE } from '../../Interface'
 import { ClientType, INodeOptionsValue } from 'accelance-components'
 import { databaseEntities } from '../../utils'
 import logger from '../../utils/logger'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
 import { OMIT_QUEUE_JOB_DATA } from '../../utils/constants'
 import { executeCustomNodeFunction } from '../../utils/executeCustomNodeFunction'
@@ -24,7 +24,7 @@ const getAllNodes = async (client?: ClientType) => {
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: nodesService.getAllNodes - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: nodesService.getAllNodes - ${getErrorMessage(error)}`)
     }
 }
 
@@ -42,7 +42,7 @@ const getAllNodesForCategory = async (category: string, client?: ClientType) => 
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: nodesService.getAllNodesForCategory - ${getErrorMessage(error)}`
         )
@@ -57,10 +57,10 @@ const getNodeByName = async (nodeName: string, client?: ClientType) => {
             const clonedNode = cloneDeep(appServer.nodesPool.componentNodes[nodeName])
             return filterNodeByClient(clonedNode, client)
         } else {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Node ${nodeName} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Node ${nodeName} not found`)
         }
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: nodesService.getAllNodes - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: nodesService.getAllNodes - ${getErrorMessage(error)}`)
     }
 }
 
@@ -71,20 +71,20 @@ const getSingleNodeIcon = async (nodeName: string) => {
         if (Object.prototype.hasOwnProperty.call(appServer.nodesPool.componentNodes, nodeName)) {
             const nodeInstance = appServer.nodesPool.componentNodes[nodeName]
             if (nodeInstance.icon === undefined) {
-                throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Node ${nodeName} icon not found`)
+                throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Node ${nodeName} icon not found`)
             }
 
             if (nodeInstance.icon.endsWith('.svg') || nodeInstance.icon.endsWith('.png') || nodeInstance.icon.endsWith('.jpg')) {
                 const filepath = nodeInstance.icon
                 return filepath
             } else {
-                throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Node ${nodeName} icon is missing icon`)
+                throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Node ${nodeName} icon is missing icon`)
             }
         } else {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Node ${nodeName} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Node ${nodeName} not found`)
         }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: nodesService.getSingleNodeIcon - ${getErrorMessage(error)}`
         )
@@ -115,10 +115,10 @@ const getSingleNodeAsyncOptions = async (nodeName: string, requestBody: any): Pr
                 return []
             }
         } else {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Node ${nodeName} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Node ${nodeName} not found`)
         }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: nodesService.getSingleNodeAsyncOptions - ${getErrorMessage(error)}`
         )

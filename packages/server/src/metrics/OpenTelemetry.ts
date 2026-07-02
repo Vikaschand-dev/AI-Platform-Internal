@@ -1,4 +1,4 @@
-import { FLOWISE_METRIC_COUNTERS, IMetricsProvider } from '../Interface.Metrics'
+import { ACCELANCE_METRIC_COUNTERS, IMetricsProvider } from '../Interface.Metrics'
 import { Resource } from '@opentelemetry/resources'
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions'
 import { MeterProvider, PeriodicExportingMetricReader, Histogram } from '@opentelemetry/sdk-metrics'
@@ -107,7 +107,7 @@ export class OpenTelemetry implements IMetricsProvider {
             const meter = this.meterProvider.getMeter('flowise-metrics')
             // look at the FLOWISE_COUNTER enum in Interface.Metrics.ts and get all values
             // for each counter in the enum, create a new promClient.Counter and add it to the registry
-            const enumEntries = Object.entries(FLOWISE_METRIC_COUNTERS)
+            const enumEntries = Object.entries(ACCELANCE_METRIC_COUNTERS)
             enumEntries.forEach(([name, value]) => {
                 try {
                     // Check if we've already created this metric
@@ -130,14 +130,14 @@ export class OpenTelemetry implements IMetricsProvider {
 
             try {
                 // Add version gauge if not already created
-                if (!createdMetrics.has('flowise_version')) {
-                    const versionGuage = meter.createGauge('flowise_version', {
+                if (!createdMetrics.has('accelance_version')) {
+                    const versionGuage = meter.createGauge('accelance_version', {
                         description: 'Flowise version'
                     })
                     // remove the last dot from the version string, e.g. 2.1.3 -> 2.13 (gauge needs a number - float)
                     const formattedVersion = flowiseVersion.version.replace(/\.(\d+)$/, '$1')
                     versionGuage.record(parseFloat(formattedVersion))
-                    createdMetrics.set('flowise_version', true)
+                    createdMetrics.set('accelance_version', true)
                 }
             } catch (error) {
                 console.error('Error creating version gauge:', error)

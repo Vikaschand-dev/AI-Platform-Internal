@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Unit tests for MCP server service (packages/server/src/services/mcp-server/index.ts)
  *
  * These tests mock the database layer (getRunningExpressApp) and test the
@@ -6,7 +6,7 @@
  * toolName validation, and parseMcpConfig.
  */
 import { StatusCodes } from 'http-status-codes'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 
 // Mock typeorm decorators before any entity import (virtual: true for pnpm resolution)
 jest.mock(
@@ -109,7 +109,7 @@ describe('mcpServerService', () => {
 
         it('throws NOT_FOUND when chatflow does not exist', async () => {
             mockFindOne.mockResolvedValue(null)
-            await expect(mcpServerService.getMcpServerConfig('no-such', 'ws-1')).rejects.toThrow(InternalFlowiseError)
+            await expect(mcpServerService.getMcpServerConfig('no-such', 'ws-1')).rejects.toThrow(InternalAccelanceError)
             await expect(mcpServerService.getMcpServerConfig('no-such', 'ws-1')).rejects.toMatchObject({
                 statusCode: StatusCodes.NOT_FOUND
             })

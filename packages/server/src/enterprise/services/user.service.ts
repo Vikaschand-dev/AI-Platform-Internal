@@ -1,6 +1,6 @@
-import { StatusCodes } from 'http-status-codes'
+﻿import { StatusCodes } from 'http-status-codes'
 import { DataSource, ILike, QueryRunner } from 'typeorm'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { generateId } from '../../utils'
 import { GeneralErrorMessage } from '../../utils/constants'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
@@ -39,7 +39,7 @@ export class UserService {
     }
 
     public validateUserId(id: string | undefined) {
-        if (isInvalidUUID(id)) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_ID)
+        if (isInvalidUUID(id)) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_ID)
     }
 
     public async readUserById(id: string | undefined, queryRunner: QueryRunner) {
@@ -48,15 +48,15 @@ export class UserService {
     }
 
     public validateUserName(name: string | undefined) {
-        if (isInvalidName(name)) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_NAME)
+        if (isInvalidName(name)) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_NAME)
     }
 
     public validateUserEmail(email: string | undefined) {
-        if (isInvalidEmail(email)) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
+        if (isInvalidEmail(email)) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
     }
 
     public async readUserByEmail(email: string | undefined, queryRunner: QueryRunner) {
-        if (!email) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
+        if (!email) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
         this.validateUserEmail(email)
         return await queryRunner.manager.findOneBy(User, { email: ILike(email) })
     }
@@ -67,7 +67,7 @@ export class UserService {
 
     public validateUserStatus(status: string | undefined) {
         if (status && !Object.values(UserStatus).includes(status as UserStatus))
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_STATUS)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_STATUS)
     }
 
     public async readUser(queryRunner: QueryRunner) {
@@ -76,13 +76,13 @@ export class UserService {
 
     public encryptUserCredential(credential: string | undefined) {
         if (!credential || isInvalidPassword(credential))
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.INVALID_PASSWORD)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.INVALID_PASSWORD)
         return getHash(credential)
     }
 
     public async createNewUser(data: Partial<User>, queryRunner: QueryRunner) {
         const user = await this.readUserByEmail(data.email, queryRunner)
-        if (user) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
+        if (user) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
         if (data.credential) data.credential = this.encryptUserCredential(data.credential)
         if (!data.name) data.name = data.email
         this.validateUserName(data.name)
@@ -92,7 +92,7 @@ export class UserService {
         const createdById = data.createdBy
         if (createdById) {
             const createdByUser = await this.readUserById(createdById, queryRunner)
-            if (!createdByUser) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+            if (!createdByUser) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
             data.createdBy = createdByUser.id
             data.updatedBy = data.createdBy
         } else {
@@ -147,13 +147,13 @@ export class UserService {
             queryRunner = this.dataSource.createQueryRunner()
             await queryRunner.connect()
             const oldUserData = await this.readUserById(newUserData.id, queryRunner)
-            if (!oldUserData) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+            if (!oldUserData) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
 
             const currentEmail = oldUserData.email
 
             if (newUserData.updatedBy) {
                 const updateUserData = await this.readUserById(newUserData.updatedBy, queryRunner)
-                if (!updateUserData) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+                if (!updateUserData) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
             }
 
             if (newUserData.name) {
@@ -162,14 +162,14 @@ export class UserService {
 
             if (newUserData.oldPassword && newUserData.newPassword && newUserData.confirmPassword) {
                 if (!oldUserData.credential) {
-                    throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_CREDENTIAL)
+                    throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_CREDENTIAL)
                 }
                 // verify old password
                 if (!compareHash(newUserData.oldPassword, oldUserData.credential)) {
-                    throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_CREDENTIAL)
+                    throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_CREDENTIAL)
                 }
                 if (newUserData.newPassword !== newUserData.confirmPassword) {
-                    throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.PASSWORDS_DO_NOT_MATCH)
+                    throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.PASSWORDS_DO_NOT_MATCH)
                 }
                 newUserData.credential = this.encryptUserCredential(newUserData.newPassword)
                 newUserData.tempToken = ''

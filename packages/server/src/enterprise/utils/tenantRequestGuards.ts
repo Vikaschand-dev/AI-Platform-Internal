@@ -1,7 +1,7 @@
-import { Request } from 'express'
+﻿import { Request } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { QueryRunner } from 'typeorm'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { GeneralErrorMessage } from '../../utils/constants'
 import { Workspace } from '../database/entities/workspace.entity'
 import { LoggedInUser } from '../Interface.Enterprise'
@@ -10,7 +10,7 @@ import { OrganizationUserService } from '../services/organization-user.service'
 export function getLoggedInUser(req: Request): LoggedInUser {
     const user = req.user as LoggedInUser | undefined
     if (!user?.id || !user?.activeOrganizationId || !user?.activeWorkspaceId) {
-        throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, GeneralErrorMessage.UNAUTHORIZED)
+        throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, GeneralErrorMessage.UNAUTHORIZED)
     }
     return user
 }
@@ -26,7 +26,7 @@ export function getActiveWorkspaceIdForRequest(req: Request): string {
         return getLoggedInUser(req).activeWorkspaceId
     }
     if (!user?.activeWorkspaceId || !user?.activeOrganizationId) {
-        throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, GeneralErrorMessage.UNAUTHORIZED)
+        throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, GeneralErrorMessage.UNAUTHORIZED)
     }
     return user.activeWorkspaceId
 }
@@ -35,7 +35,7 @@ export function getActiveWorkspaceIdForRequest(req: Request): string {
 export function assertQueryOrganizationMatchesActiveOrg(user: LoggedInUser, organizationId: string | undefined): void {
     if (organizationId === undefined || organizationId === '') return
     if (organizationId !== user.activeOrganizationId) {
-        throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+        throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
     }
 }
 
@@ -57,17 +57,17 @@ export async function assertWorkspaceIdAccessibleToUser(
     if (user.isOrganizationAdmin) {
         const workspace = await queryRunner.manager.findOneBy(Workspace, { id: workspaceId })
         if (!workspace || workspace.organizationId !== user.activeOrganizationId) {
-            throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+            throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
         }
         return
     }
 
-    throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+    throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
 }
 
 export function assertStripeIdMatchesSession(requestedId: string, activeId: string | undefined): void {
     if (!activeId || requestedId !== activeId) {
-        throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+        throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
     }
 }
 
@@ -79,10 +79,10 @@ export function userMayManageOrgUsers(user: LoggedInUser): boolean {
 export async function assertMayReadTargetUser(sessionUser: LoggedInUser, targetUserId: string, queryRunner: QueryRunner): Promise<void> {
     if (sessionUser.id && targetUserId === sessionUser.id) return
     if (!sessionUser.activeOrganizationId) {
-        throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+        throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
     }
     if (!userMayManageOrgUsers(sessionUser)) {
-        throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+        throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
     }
     const organizationUserService = new OrganizationUserService()
     const { organizationUser } = await organizationUserService.readOrganizationUserByOrganizationIdUserId(
@@ -91,6 +91,6 @@ export async function assertMayReadTargetUser(sessionUser: LoggedInUser, targetU
         queryRunner
     )
     if (!organizationUser) {
-        throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+        throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
     }
 }

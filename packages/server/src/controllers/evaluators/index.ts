@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+﻿import { Request, Response, NextFunction } from 'express'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { StatusCodes } from 'http-status-codes'
 import evaluatorService from '../../services/evaluator'
 import { getPageAndLimitParams } from '../../utils/pagination'
@@ -9,7 +9,7 @@ const getAllEvaluators = async (req: Request, res: Response, next: NextFunction)
         const { page, limit } = getPageAndLimitParams(req)
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: evaluatorService.getAllEvaluators - workspace ${workspaceId} not found!`
             )
@@ -24,11 +24,11 @@ const getAllEvaluators = async (req: Request, res: Response, next: NextFunction)
 const getEvaluator = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(StatusCodes.PRECONDITION_FAILED, `Error: evaluatorService.getEvaluator - id not provided!`)
+            throw new InternalAccelanceError(StatusCodes.PRECONDITION_FAILED, `Error: evaluatorService.getEvaluator - id not provided!`)
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: evaluatorService.getEvaluator - workspace ${workspaceId} not found!`
             )
@@ -43,7 +43,10 @@ const getEvaluator = async (req: Request, res: Response, next: NextFunction) => 
 const createEvaluator = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.body) {
-            throw new InternalFlowiseError(StatusCodes.PRECONDITION_FAILED, `Error: evaluatorService.createEvaluator - body not provided!`)
+            throw new InternalAccelanceError(
+                StatusCodes.PRECONDITION_FAILED,
+                `Error: evaluatorService.createEvaluator - body not provided!`
+            )
         }
         const body = req.body
         body.workspaceId = req.user?.activeWorkspaceId
@@ -57,14 +60,17 @@ const createEvaluator = async (req: Request, res: Response, next: NextFunction) 
 const updateEvaluator = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.body) {
-            throw new InternalFlowiseError(StatusCodes.PRECONDITION_FAILED, `Error: evaluatorService.updateEvaluator - body not provided!`)
+            throw new InternalAccelanceError(
+                StatusCodes.PRECONDITION_FAILED,
+                `Error: evaluatorService.updateEvaluator - body not provided!`
+            )
         }
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(StatusCodes.PRECONDITION_FAILED, `Error: evaluatorService.updateEvaluator - id not provided!`)
+            throw new InternalAccelanceError(StatusCodes.PRECONDITION_FAILED, `Error: evaluatorService.updateEvaluator - id not provided!`)
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: evaluatorService.updateEvaluator - workspace ${workspaceId} not found!`
             )
@@ -79,11 +85,11 @@ const updateEvaluator = async (req: Request, res: Response, next: NextFunction) 
 const deleteEvaluator = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(StatusCodes.PRECONDITION_FAILED, `Error: evaluatorService.deleteEvaluator - id not provided!`)
+            throw new InternalAccelanceError(StatusCodes.PRECONDITION_FAILED, `Error: evaluatorService.deleteEvaluator - id not provided!`)
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: evaluatorService.deleteEvaluator - workspace ${workspaceId} not found!`
             )

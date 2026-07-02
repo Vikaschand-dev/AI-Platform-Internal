@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express'
+﻿import { Request, Response, NextFunction } from 'express'
 import * as fs from 'fs'
 import openaiAssistantsService from '../../services/openai-assistants'
 import contentDisposition from 'content-disposition'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { StatusCodes } from 'http-status-codes'
 import { streamStorageFile } from 'accelance-components'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
@@ -14,7 +14,7 @@ import { validateFileMimeTypeAndExtensionMatch } from '../../utils/fileValidatio
 const getAllOpenaiAssistants = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.query === 'undefined' || !req.query.credential) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: openaiAssistantsController.getAllOpenaiAssistants - credential not provided!`
             )
@@ -30,13 +30,13 @@ const getAllOpenaiAssistants = async (req: Request, res: Response, next: NextFun
 const getSingleOpenaiAssistant = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: openaiAssistantsController.getSingleOpenaiAssistant - id not provided!`
             )
         }
         if (typeof req.query === 'undefined' || !req.query.credential) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: openaiAssistantsController.getSingleOpenaiAssistant - credential not provided!`
             )
@@ -64,21 +64,21 @@ const getFileFromAssistant = async (req: Request, res: Response, next: NextFunct
             id: chatflowId
         })
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         }
         const chatflowWorkspaceId = chatflow.workspaceId
         const workspace = await appServer.AppDataSource.getRepository(Workspace).findOneBy({
             id: chatflowWorkspaceId
         })
         if (!workspace) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Workspace ${chatflowWorkspaceId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Workspace ${chatflowWorkspaceId} not found`)
         }
         const orgId = workspace.organizationId as string
 
         res.setHeader('Content-Disposition', contentDisposition(fileName))
         const fileStream = await streamStorageFile(chatflowId, chatId, fileName, orgId)
 
-        if (!fileStream) throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: getFileFromAssistant`)
+        if (!fileStream) throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: getFileFromAssistant`)
 
         if (fileStream instanceof fs.ReadStream && fileStream?.pipe) {
             fileStream.pipe(res)
@@ -93,7 +93,7 @@ const getFileFromAssistant = async (req: Request, res: Response, next: NextFunct
 const uploadAssistantFiles = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.query === 'undefined' || !req.query.credential) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: openaiAssistantsVectorStoreController.uploadFilesToAssistantVectorStore - credential not provided!`
             )

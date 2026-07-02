@@ -1,20 +1,20 @@
-import { Request, Response, NextFunction } from 'express'
+﻿import { Request, Response, NextFunction } from 'express'
 import chatflowsService from '../../services/chatflows'
 import leadsService from '../../services/leads'
 import { StatusCodes } from 'http-status-codes'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 
 const getAllLeadsForChatflow = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params.id === 'undefined' || req.params.id === '') {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: leadsController.getAllLeadsForChatflow - id not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: leadsController.getAllLeadsForChatflow - workspace ${workspaceId} not found!`
             )
@@ -22,7 +22,7 @@ const getAllLeadsForChatflow = async (req: Request, res: Response, next: NextFun
         const chatflowid = req.params.id
         const chatflow = await chatflowsService.getChatflowByIdForWorkspace(chatflowid, workspaceId)
         if (!chatflow) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: leadsController.getAllLeadsForChatflow - chatflow ${chatflowid} not found in workspace ${workspaceId}`
             )
@@ -37,7 +37,7 @@ const getAllLeadsForChatflow = async (req: Request, res: Response, next: NextFun
 const createLeadInChatflow = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.body === 'undefined' || req.body === '') {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: leadsController.createLeadInChatflow - body not provided!`
             )

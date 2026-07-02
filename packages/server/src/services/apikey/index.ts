@@ -1,8 +1,8 @@
-import { StatusCodes } from 'http-status-codes'
+﻿import { StatusCodes } from 'http-status-codes'
 import { v4 as uuidv4 } from 'uuid'
 import { ApiKey } from '../../database/entities/ApiKey'
 import { LoggedInUser } from '../../enterprise/Interface.Enterprise'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
 import { Platform } from '../../Interface'
 import { addChatflowsCount } from '../../utils/addChatflowsCount'
@@ -15,7 +15,7 @@ import logger from '../../utils/logger'
  * @param user - The logged-in user
  * @param permissions - string array of requested permissions
  * @param operation - The operation being performed (for error message)
- * @throws InternalFlowiseError if validation fails
+ * @throws InternalAccelanceError if validation fails
  */
 function validatePermissions(user: LoggedInUser, requestedPermissions: string[], operation: string) {
     // API Keys should not have workspace or admin permissions
@@ -25,7 +25,7 @@ function validatePermissions(user: LoggedInUser, requestedPermissions: string[],
     )
 
     if (hasRestrictedPermissions) {
-        throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, `Cannot ${operation} API key with workspace or admin permissions`)
+        throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, `Cannot ${operation} API key with workspace or admin permissions`)
     }
 
     // For Cloud platform, check feature-gated permissions
@@ -43,7 +43,10 @@ function validatePermissions(user: LoggedInUser, requestedPermissions: string[],
                     `Customer: ${user.activeOrganizationCustomerId || 'unknown'}, ` +
                     `Workspace: ${user.activeWorkspaceId || 'unknown'}`
             )
-            throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Unable to validate permissions: user features not available`)
+            throw new InternalAccelanceError(
+                StatusCodes.INTERNAL_SERVER_ERROR,
+                `Unable to validate permissions: user features not available`
+            )
         }
 
         const featureToPermissionMap: { [key: string]: string[] } = {
@@ -70,7 +73,7 @@ function validatePermissions(user: LoggedInUser, requestedPermissions: string[],
         )
 
         if (hasDisabledFeaturePermissions) {
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, `Cannot ${operation} API key with permissions for disabled features`)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, `Cannot ${operation} API key with permissions for disabled features`)
         }
     }
 
@@ -79,7 +82,7 @@ function validatePermissions(user: LoggedInUser, requestedPermissions: string[],
         // Check if all requested permissions are included in user permissions
         const hasInvalidPermissions = requestedPermissions.some((permission: string) => !user.permissions.includes(permission))
         if (hasInvalidPermissions) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.BAD_REQUEST,
                 `Cannot ${operation} API key with permissions that exceed your own permissions`
             )
@@ -137,7 +140,10 @@ const getAllApiKeys = async (user: LoggedInUser, page: number = -1, limit: numbe
             return keysWithChatflows
         }
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: apikeyService.getAllApiKeys - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            `Error: apikeyService.getAllApiKeys - ${getErrorMessage(error)}`
+        )
     }
 }
 
@@ -152,7 +158,7 @@ const getApiKey = async (apiKey: string) => {
         }
         return currentKey
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: apikeyService.getApiKey - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: apikeyService.getApiKey - ${getErrorMessage(error)}`)
     }
 }
 
@@ -167,7 +173,10 @@ const getApiKeyById = async (apiKeyId: string) => {
         }
         return currentKey
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: apikeyService.getApiKeyById - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            `Error: apikeyService.getApiKeyById - ${getErrorMessage(error)}`
+        )
     }
 }
 
@@ -201,7 +210,7 @@ const updateApiKey = async (user: LoggedInUser, id: string, keyName: string, per
         workspaceId: user.activeWorkspaceId
     })
     if (!currentKey) {
-        throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `ApiKey ${currentKey} not found`)
+        throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `ApiKey ${currentKey} not found`)
     }
     currentKey.keyName = keyName
     currentKey.permissions = permissions
@@ -214,11 +223,11 @@ const deleteApiKey = async (id: string, workspaceId: string) => {
         const appServer = getRunningExpressApp()
         const dbResponse = await appServer.AppDataSource.getRepository(ApiKey).delete({ id, workspaceId })
         if (!dbResponse) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `ApiKey ${id} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `ApiKey ${id} not found`)
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: apikeyService.deleteApiKey - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: apikeyService.deleteApiKey - ${getErrorMessage(error)}`)
     }
 }
 
@@ -229,14 +238,14 @@ const verifyApiKey = async (paramApiKey: string): Promise<string> => {
             apiKey: paramApiKey
         })
         if (!apiKey) {
-            throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, `Unauthorized`)
+            throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, `Unauthorized`)
         }
         return 'OK'
     } catch (error) {
-        if (error instanceof InternalFlowiseError && error.statusCode === StatusCodes.UNAUTHORIZED) {
+        if (error instanceof InternalAccelanceError && error.statusCode === StatusCodes.UNAUTHORIZED) {
             throw error
         } else {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.INTERNAL_SERVER_ERROR,
                 `Error: apikeyService.verifyApiKey - ${getErrorMessage(error)}`
             )

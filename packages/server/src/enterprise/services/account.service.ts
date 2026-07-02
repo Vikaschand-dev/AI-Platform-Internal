@@ -1,4 +1,4 @@
-import bcrypt from 'bcryptjs'
+﻿import bcrypt from 'bcryptjs'
 import { removeFolderFromStorage } from 'accelance-components'
 import { StatusCodes } from 'http-status-codes'
 import jwt, { JwtPayload } from 'jsonwebtoken'
@@ -23,7 +23,7 @@ import { Lead } from '../../database/entities/Lead'
 import { Tool } from '../../database/entities/Tool'
 import { UpsertHistory } from '../../database/entities/UpsertHistory'
 import { Variable } from '../../database/entities/Variable'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { IdentityManager } from '../../IdentityManager'
 import { Platform, UserPlan } from '../../Interface'
 import { GeneralErrorMessage } from '../../utils/constants'
@@ -116,10 +116,10 @@ export class AccountService {
         try {
             const payload = jwt.verify(token, getJWTAuthTokenSecret()) as JwtPayload
             if (payload.typ === EMAIL_CHANGE_JWT_TYP) {
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.EMAIL_CHANGE_USE_CONFIRM_LINK)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.EMAIL_CHANGE_USE_CONFIRM_LINK)
             }
         } catch (err) {
-            if (err instanceof InternalFlowiseError) throw err
+            if (err instanceof InternalAccelanceError) throw err
         }
     }
 
@@ -135,7 +135,7 @@ export class AccountService {
 
     public async resendVerificationEmail({ email }: { email: string }) {
         if (!this.canSendTransactionalEmail()) {
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.SMTP_NOT_CONFIGURED)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.SMTP_NOT_CONFIGURED)
         }
         const queryRunner = this.dataSource.createQueryRunner()
         await queryRunner.connect()
@@ -143,11 +143,11 @@ export class AccountService {
             await queryRunner.startTransaction()
 
             const user = await this.userService.readUserByEmail(email, queryRunner)
-            if (!user) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+            if (!user) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
             if (user && user.status === UserStatus.ACTIVE)
-                throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
+                throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
 
-            if (!user.email) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
+            if (!user.email) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
 
             const updateUserData: Partial<User> = {}
             updateUserData.tempToken = generateTempToken()
@@ -177,7 +177,7 @@ export class AccountService {
 
     private async ensureOneOrganizationOnly(queryRunner: QueryRunner) {
         const organizations = await this.organizationservice.readOrganization(queryRunner)
-        if (organizations.length > 0) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, 'You can only have one organization')
+        if (organizations.length > 0) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, 'You can only have one organization')
     }
 
     private async createRegisterAccount(data: AccountDTO, queryRunner: QueryRunner) {
@@ -198,9 +198,9 @@ export class AccountService {
             case Platform.CLOUD: {
                 const user = await this.userService.readUserByEmail(data.user.email, queryRunner)
                 if (user && (user.status === UserStatus.ACTIVE || user.status === UserStatus.UNVERIFIED))
-                    throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
+                    throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
 
-                if (!data.user.email) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
+                if (!data.user.email) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
                 const { customerId, subscriptionId } = await this.identityManager.createStripeUserAndSubscribe({
                     email: data.user.email,
                     userPlan: UserPlan.FREE,
@@ -244,25 +244,25 @@ export class AccountService {
             case Platform.ENTERPRISE: {
                 if (data.user.tempToken) {
                     const user = await this.userService.readUserByToken(data.user.tempToken, queryRunner)
-                    if (!user) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+                    if (!user) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
                     if (user.email.toLowerCase() !== data.user.email?.toLowerCase())
-                        throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
+                        throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_EMAIL)
                     const name = data.user.name
                     if (data.user.credential) user.credential = this.userService.encryptUserCredential(data.user.credential)
                     data.user = user
                     const organizationUser = await this.organizationUserService.readOrganizationUserByUserId(user.id, queryRunner)
                     if (!organizationUser)
-                        throw new InternalFlowiseError(StatusCodes.NOT_FOUND, OrganizationUserErrorMessage.ORGANIZATION_USER_NOT_FOUND)
+                        throw new InternalAccelanceError(StatusCodes.NOT_FOUND, OrganizationUserErrorMessage.ORGANIZATION_USER_NOT_FOUND)
                     const assignedOrganization = await this.organizationservice.readOrganizationById(
                         organizationUser[0].organizationId,
                         queryRunner
                     )
                     if (!assignedOrganization)
-                        throw new InternalFlowiseError(StatusCodes.NOT_FOUND, OrganizationErrorMessage.ORGANIZATION_NOT_FOUND)
+                        throw new InternalAccelanceError(StatusCodes.NOT_FOUND, OrganizationErrorMessage.ORGANIZATION_NOT_FOUND)
                     data.organization = assignedOrganization
                     const tokenExpiry = new Date(user.tokenExpiry!)
                     const today = new Date()
-                    if (today > tokenExpiry) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.EXPIRED_TEMP_TOKEN)
+                    if (today > tokenExpiry) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.EXPIRED_TEMP_TOKEN)
                     data.user.tempToken = ''
                     data.user.tokenExpiry = null
                     data.user.name = name
@@ -282,7 +282,7 @@ export class AccountService {
                 break
             }
             default:
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.UNHANDLED_EDGE_CASE)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.UNHANDLED_EDGE_CASE)
         }
 
         if (!data.organization.id) {
@@ -353,14 +353,14 @@ export class AccountService {
 
         try {
             const workspace = await this.workspaceService.readWorkspaceById(data.workspace.id, queryRunner)
-            if (!workspace) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, WorkspaceErrorMessage.WORKSPACE_NOT_FOUND)
+            if (!workspace) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, WorkspaceErrorMessage.WORKSPACE_NOT_FOUND)
             data.workspace = workspace
 
             const totalOrgUsers = await this.organizationUserService.readOrgUsersCountByOrgId(data.workspace.organizationId || '')
             const subscriptionId = currentUser?.activeOrganizationSubscriptionId || ''
 
             const role = await this.roleService.readRoleByRoleIdOrganizationId(data.role.id, data.workspace.organizationId, queryRunner)
-            if (!role) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, RoleErrorMessage.ROLE_NOT_FOUND)
+            if (!role) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, RoleErrorMessage.ROLE_NOT_FOUND)
             data.role = role
             const user = await this.userService.readUserByEmail(data.user.email, queryRunner)
             if (!user) {
@@ -542,20 +542,20 @@ export class AccountService {
         try {
             if (!data.user.credential) {
                 await auditService.recordLoginActivity(data.user.email || '', LoginActivityCode.INCORRECT_CREDENTIAL, 'Login Failed')
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_CREDENTIAL)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_CREDENTIAL)
             }
             const user = await this.userService.readUserByEmail(data.user.email, queryRunner)
             if (!user) {
                 await auditService.recordLoginActivity(data.user.email || '', LoginActivityCode.UNKNOWN_USER, 'Login Failed')
-                throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+                throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
             }
             if (!user.credential) {
                 await auditService.recordLoginActivity(user.email || '', LoginActivityCode.INCORRECT_CREDENTIAL, 'Login Failed')
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_CREDENTIAL)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_USER_CREDENTIAL)
             }
             if (!compareHash(data.user.credential, user.credential)) {
                 await auditService.recordLoginActivity(user.email || '', LoginActivityCode.INCORRECT_CREDENTIAL, 'Login Failed')
-                throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, UserErrorMessage.INCORRECT_USER_EMAIL_OR_CREDENTIALS)
+                throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, UserErrorMessage.INCORRECT_USER_EMAIL_OR_CREDENTIALS)
             }
 
             // If the stored hash was created with fewer salt rounds than the current minimum
@@ -571,7 +571,7 @@ export class AccountService {
 
             if (user.status === UserStatus.UNVERIFIED) {
                 await auditService.recordLoginActivity(data.user.email || '', LoginActivityCode.REGISTRATION_PENDING, 'Login Failed')
-                throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, UserErrorMessage.USER_EMAIL_UNVERIFIED)
+                throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, UserErrorMessage.USER_EMAIL_UNVERIFIED)
             }
             let wsUserOrUsers = await this.workspaceUserService.readWorkspaceUserByLastLogin(user.id, queryRunner)
             if (Array.isArray(wsUserOrUsers)) {
@@ -579,7 +579,7 @@ export class AccountService {
                     wsUserOrUsers = wsUserOrUsers[0]
                 } else {
                     await auditService.recordLoginActivity(user.email || '', LoginActivityCode.NO_ASSIGNED_WORKSPACE, 'Login Failed')
-                    throw new InternalFlowiseError(StatusCodes.NOT_FOUND, WorkspaceUserErrorMessage.WORKSPACE_USER_NOT_FOUND)
+                    throw new InternalAccelanceError(StatusCodes.NOT_FOUND, WorkspaceUserErrorMessage.WORKSPACE_USER_NOT_FOUND)
                 }
             }
             if (platform === Platform.ENTERPRISE) {
@@ -599,10 +599,10 @@ export class AccountService {
         await queryRunner.connect()
         try {
             await queryRunner.startTransaction()
-            if (!data.user.tempToken) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
+            if (!data.user.tempToken) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
             this.assertNotEmailChangeJwt(data.user.tempToken)
             const user = await this.userService.readUserByToken(data.user.tempToken, queryRunner)
-            if (!user) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+            if (!user) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
             data.user = user
             data.user.tempToken = null
             data.user.tokenExpiry = null
@@ -622,14 +622,14 @@ export class AccountService {
     public async forgotPassword(data: AccountDTO) {
         data = this.initializeAccountDTO(data)
         if (!this.canSendTransactionalEmail()) {
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.SMTP_NOT_CONFIGURED)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.SMTP_NOT_CONFIGURED)
         }
         const queryRunner = this.dataSource.createQueryRunner()
         await queryRunner.connect()
         try {
             await queryRunner.startTransaction()
             const user = await this.userService.readUserByEmail(data.user.email, queryRunner)
-            if (!user) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+            if (!user) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
 
             data.user = user
             data.user.tempToken = generateTempToken()
@@ -658,20 +658,20 @@ export class AccountService {
         const queryRunner = this.dataSource.createQueryRunner()
         await queryRunner.connect()
         try {
-            if (!data.user.tempToken) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
+            if (!data.user.tempToken) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
             this.assertNotEmailChangeJwt(data.user.tempToken)
 
             const user = await this.userService.readUserByEmail(data.user.email, queryRunner)
-            if (!user) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+            if (!user) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
             if (!user.tempToken || user.tempToken !== data.user.tempToken)
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
 
             const tokenExpiry = user.tokenExpiry
-            if (!tokenExpiry) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
+            if (!tokenExpiry) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
 
             const tokenExpiryMoment = moment(tokenExpiry)
             if (!tokenExpiryMoment.isValid() || moment().isAfter(tokenExpiryMoment))
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.EXPIRED_TEMP_TOKEN)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.EXPIRED_TEMP_TOKEN)
 
             // @ts-ignore
             const password = data.user.password
@@ -733,26 +733,26 @@ export class AccountService {
      */
     public async delete(queryRunner: QueryRunner, loggedInUser: LoggedInUser, ipAddress: string): Promise<void> {
         if (this.identityManager.getPlatformType() !== Platform.CLOUD)
-            throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
-        if (!loggedInUser.id) throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, GeneralErrorMessage.UNAUTHORIZED)
+            throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+        if (!loggedInUser.id) throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, GeneralErrorMessage.UNAUTHORIZED)
 
         // Step 3.1: Find User ID by Email
         const user = await this.userService.readUserById(loggedInUser.id, queryRunner)
-        if (!user) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+        if (!user) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
 
         // Step 3.1: Find Organization Memberships and Roles
         const targetUserOrganizationMemberships = await this.organizationUserService.readOrganizationUserByUserId(user.id, queryRunner)
         if (!targetUserOrganizationMemberships?.length)
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, OrganizationUserErrorMessage.ORGANIZATION_USER_NOT_FOUND)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, OrganizationUserErrorMessage.ORGANIZATION_USER_NOT_FOUND)
         // Step 3.1.1: Verify that there is only one owner
         const organizationIdsWhereOwner = targetUserOrganizationMemberships
             .filter((organizationUser) => organizationUser.isOrgOwner)
             .map((organizationUser) => organizationUser)
         if (organizationIdsWhereOwner.length !== 1)
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.NOT_ALLOWED_TO_DELETE_OWNER)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.NOT_ALLOWED_TO_DELETE_OWNER)
         const organizaiton = await this.organizationservice.readOrganizationById(organizationIdsWhereOwner[0].organizationId, queryRunner)
         if (!organizaiton?.subscriptionId)
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, OrganizationErrorMessage.ORGANIZATION_HAS_NO_SUBSCRIPTION)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, OrganizationErrorMessage.ORGANIZATION_HAS_NO_SUBSCRIPTION)
         // Step 3.1.2: Verify how many people invited him as member
         const organizationsUserWasInvitedTo = targetUserOrganizationMemberships
             .filter((organizationUser) => !organizationUser.isOrgOwner)
@@ -761,7 +761,7 @@ export class AccountService {
         // Step 3.3: Find All Members and Owner in the Organization
         const organizationUsers = await this.organizationUserService.readOrganizationUserByOrganizationId(organizaiton.id, queryRunner)
         if (!organizationUsers)
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, OrganizationUserErrorMessage.ORGANIZATION_USER_NOT_FOUND)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, OrganizationUserErrorMessage.ORGANIZATION_USER_NOT_FOUND)
         const membershipsWhereUserWasInvited = organizationUsers
             .filter((organizationUser) => !organizationUser.isOrgOwner)
             .map((organizationUser) => organizationUser.userId)
@@ -770,7 +770,7 @@ export class AccountService {
         const workspaceIds = (await queryRunner.manager.findBy(Workspace, { organizationId: organizaiton.id })).map(
             (workspace) => workspace.id
         )
-        if (workspaceIds.length === 0) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, WorkspaceErrorMessage.WORKSPACE_NOT_FOUND)
+        if (workspaceIds.length === 0) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, WorkspaceErrorMessage.WORKSPACE_NOT_FOUND)
         const chatflowIds = (await queryRunner.manager.findBy(ChatFlow, { workspaceId: In(workspaceIds) })).map((chatflow) => chatflow.id)
         const documentStoreIds = (await queryRunner.manager.findBy(DocumentStore, { workspaceId: In(workspaceIds) })).map(
             (documentStore) => documentStore.id
@@ -873,7 +873,7 @@ export class AccountService {
         try {
             await queryRunner.startTransaction()
             const user = await this.userService.readUserById(userId, queryRunner)
-            if (!user?.email) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+            if (!user?.email) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
 
             const expiryInHours = process.env.INVITE_TOKEN_EXPIRY_IN_HOURS ? parseInt(process.env.INVITE_TOKEN_EXPIRY_IN_HOURS) : 24
             const { token, tokenExpiry } = signEmailChangeJwt(userId, newEmail, expiryInHours)
@@ -898,7 +898,7 @@ export class AccountService {
 
     public async confirmEmailChange(data: { user: { tempToken?: string } }) {
         const token = data.user?.tempToken
-        if (!token) throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
+        if (!token) throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
 
         let userId: string
         let newEmail: string
@@ -906,20 +906,20 @@ export class AccountService {
             ;({ userId, newEmail } = verifyEmailChangeJwt(token))
         } catch (e) {
             if (e instanceof jwt.TokenExpiredError) {
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.EXPIRED_TEMP_TOKEN)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.EXPIRED_TEMP_TOKEN)
             }
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.INVALID_TEMP_TOKEN)
         }
 
         const queryRunner = this.dataSource.createQueryRunner()
         await queryRunner.connect()
         try {
             const user = await this.userService.readUserById(userId, queryRunner)
-            if (!user || user.tempToken !== token) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+            if (!user || user.tempToken !== token) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
 
             const taken = await this.userService.readUserByEmail(newEmail, queryRunner)
             if (taken && taken.id !== user.id) {
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
             }
 
             await this.userService.updateUser(
@@ -950,7 +950,7 @@ export class AccountService {
         await queryRunner.connect()
         try {
             const dbUser = await this.userService.readUserById(currentUserId, queryRunner)
-            if (!dbUser) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
+            if (!dbUser) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, UserErrorMessage.USER_NOT_FOUND)
 
             const platform = this.identityManager.getPlatformType()
             const newEmailRaw = body.email?.trim()
@@ -965,7 +965,7 @@ export class AccountService {
                 this.userService.validateUserEmail(newEmailRaw)
                 const taken = await this.userService.readUserByEmail(newEmailRaw, queryRunner)
                 if (taken && taken.id !== dbUser.id) {
-                    throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
+                    throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
                 }
 
                 if (passwordChanging || nameChanging) {
@@ -1003,7 +1003,7 @@ export class AccountService {
                 this.userService.validateUserEmail(newEmailRaw)
                 const taken = await this.userService.readUserByEmail(newEmailRaw, queryRunner)
                 if (taken && taken.id !== dbUser.id) {
-                    throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
+                    throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, UserErrorMessage.USER_EMAIL_ALREADY_EXISTS)
                 }
 
                 const user = await this.userService.updateUser(

@@ -1,10 +1,10 @@
-import { StatusCodes } from 'http-status-codes'
+﻿import { StatusCodes } from 'http-status-codes'
 import { QueryRunner } from 'typeorm'
 import { validate } from 'uuid'
 import { Tool } from '../../database/entities/Tool'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
-import { FLOWISE_COUNTER_STATUS, FLOWISE_METRIC_COUNTERS } from '../../Interface.Metrics'
+import { ACCELANCE_COUNTER_STATUS, ACCELANCE_METRIC_COUNTERS } from '../../Interface.Metrics'
 import { getAppVersion } from '../../utils'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 
@@ -24,10 +24,10 @@ const createTool = async (requestBody: any, orgId: string): Promise<any> => {
             },
             orgId
         )
-        appServer.metricsProvider?.incrementCounter(FLOWISE_METRIC_COUNTERS.TOOL_CREATED, { status: FLOWISE_COUNTER_STATUS.SUCCESS })
+        appServer.metricsProvider?.incrementCounter(ACCELANCE_METRIC_COUNTERS.TOOL_CREATED, { status: ACCELANCE_COUNTER_STATUS.SUCCESS })
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.createTool - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.createTool - ${getErrorMessage(error)}`)
     }
 }
 
@@ -40,7 +40,7 @@ const deleteTool = async (toolId: string, workspaceId: string): Promise<any> => 
         })
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.deleteTool - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.deleteTool - ${getErrorMessage(error)}`)
     }
 }
 
@@ -62,7 +62,7 @@ const getAllTools = async (workspaceId?: string, page: number = -1, limit: numbe
             return data
         }
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.getAllTools - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.getAllTools - ${getErrorMessage(error)}`)
     }
 }
 
@@ -74,11 +74,11 @@ const getToolById = async (toolId: string, workspaceId: string): Promise<any> =>
             workspaceId: workspaceId
         })
         if (!dbResponse) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Tool ${toolId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Tool ${toolId} not found`)
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.getToolById - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.getToolById - ${getErrorMessage(error)}`)
     }
 }
 
@@ -90,7 +90,7 @@ const updateTool = async (toolId: string, toolBody: any, workspaceId: string): P
             workspaceId: workspaceId
         })
         if (!tool) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Tool ${toolId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Tool ${toolId} not found`)
         }
         const updateTool = new Tool()
         Object.assign(updateTool, toolBody)
@@ -99,7 +99,7 @@ const updateTool = async (toolId: string, toolBody: any, workspaceId: string): P
         const dbResponse = await appServer.AppDataSource.getRepository(Tool).save(tool)
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.updateTool - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.updateTool - ${getErrorMessage(error)}`)
     }
 }
 
@@ -107,7 +107,7 @@ const importTools = async (newTools: Partial<Tool>[], queryRunner?: QueryRunner)
     try {
         for (const data of newTools) {
             if (data.id && !validate(data.id)) {
-                throw new InternalFlowiseError(StatusCodes.PRECONDITION_FAILED, `Error: importTools - invalid id!`)
+                throw new InternalAccelanceError(StatusCodes.PRECONDITION_FAILED, `Error: importTools - invalid id!`)
             }
         }
 
@@ -149,7 +149,7 @@ const importTools = async (newTools: Partial<Tool>[], queryRunner?: QueryRunner)
 
         return insertResponse
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.importTools - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: toolsService.importTools - ${getErrorMessage(error)}`)
     }
 }
 

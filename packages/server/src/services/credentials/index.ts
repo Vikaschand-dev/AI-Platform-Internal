@@ -1,11 +1,11 @@
-import { StatusCodes } from 'http-status-codes'
+﻿import { StatusCodes } from 'http-status-codes'
 import { omit } from 'lodash'
 import { ICredentialReturnResponse } from '../../Interface'
 import { Credential } from '../../database/entities/Credential'
 import { WorkspaceShared } from '../../enterprise/database/entities/EnterpriseEntities'
 import { WorkspaceService } from '../../enterprise/services/workspace.service'
 import { getWorkspaceSearchOptions } from '../../enterprise/utils/ControllerServiceUtils'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
 import { decryptCredentialData, transformToCredentialEntity, REDACTED_CREDENTIAL_VALUE } from '../../utils'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
@@ -23,7 +23,7 @@ const createCredential = async (requestBody: any) => {
         const dbResponse = await appServer.AppDataSource.getRepository(Credential).save(credential)
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: credentialsService.createCredential - ${getErrorMessage(error)}`
         )
@@ -36,11 +36,11 @@ const deleteCredentials = async (credentialId: string, workspaceId: string): Pro
         const appServer = getRunningExpressApp()
         const dbResponse = await appServer.AppDataSource.getRepository(Credential).delete({ id: credentialId, workspaceId: workspaceId })
         if (!dbResponse) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Credential ${credentialId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Credential ${credentialId} not found`)
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: credentialsService.deleteCredential - ${getErrorMessage(error)}`
         )
@@ -117,7 +117,7 @@ const getAllCredentials = async (paramCredentialName: any, workspaceId: string) 
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: credentialsService.getAllCredentials - ${getErrorMessage(error)}`
         )
@@ -132,7 +132,7 @@ const getCredentialById = async (credentialId: string, workspaceId: string): Pro
             workspaceId: workspaceId
         })
         if (!credential) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Credential ${credentialId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Credential ${credentialId} not found`)
         }
         // Decrpyt credentialData
         const decryptedCredentialData = await decryptCredentialData(
@@ -159,7 +159,7 @@ const getCredentialById = async (credentialId: string, workspaceId: string): Pro
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: credentialsService.createCredential - ${getErrorMessage(error)}`
         )
@@ -174,7 +174,7 @@ const updateCredential = async (credentialId: string, requestBody: any, workspac
             workspaceId: workspaceId
         })
         if (!credential) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Credential ${credentialId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Credential ${credentialId} not found`)
         }
         const decryptedCredentialData = await decryptCredentialData(credential.encryptedData)
         const incomingData = requestBody.plainDataObj ?? {}
@@ -185,7 +185,7 @@ const updateCredential = async (credentialId: string, requestBody: any, workspac
         const dbResponse = await appServer.AppDataSource.getRepository(Credential).save(credential)
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: credentialsService.updateCredential - ${getErrorMessage(error)}`
         )
@@ -200,7 +200,7 @@ const revealCredentialById = async (credentialId: string, workspaceId: string): 
             workspaceId: workspaceId
         })
         if (!credential) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Credential ${credentialId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Credential ${credentialId} not found`)
         }
         const decryptedCredentialData = await decryptCredentialData(credential.encryptedData)
         const componentCredentials = appServer.nodesPool.componentCredentials
@@ -214,7 +214,7 @@ const revealCredentialById = async (credentialId: string, workspaceId: string): 
         }
         return { plainDataObj }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: credentialsService.revealCredentialById - ${getErrorMessage(error)}`
         )

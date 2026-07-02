@@ -1,9 +1,9 @@
-import { Request, Response, NextFunction } from 'express'
+﻿import { Request, Response, NextFunction } from 'express'
 import { RateLimiterManager } from '../../utils/rateLimit'
 import chatflowsService from '../../services/chatflows'
 import logger from '../../utils/logger'
 import predictionsServices from '../../services/predictions'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { StatusCodes } from 'http-status-codes'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 import { v4 as uuidv4 } from 'uuid'
@@ -14,13 +14,13 @@ import { MODE } from '../../Interface'
 const createPrediction = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: predictionsController.createPrediction - id not provided!`
             )
         }
         if (!req.body) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: predictionsController.createPrediction - body not provided!`
             )
@@ -29,7 +29,7 @@ const createPrediction = async (req: Request, res: Response, next: NextFunction)
 
         const chatflow = await chatflowsService.getChatflowById(req.params.id, workspaceId)
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${req.params.id} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${req.params.id} not found`)
         }
         let isDomainAllowed = true
         let unauthorizedOriginError = 'This site is not allowed to access this chatbot'
@@ -99,7 +99,7 @@ const createPrediction = async (req: Request, res: Response, next: NextFunction)
             if (isStreamingRequested) {
                 return res.status(StatusCodes.FORBIDDEN).send(unauthorizedOriginError)
             }
-            throw new InternalFlowiseError(StatusCodes.FORBIDDEN, unauthorizedOriginError)
+            throw new InternalAccelanceError(StatusCodes.FORBIDDEN, unauthorizedOriginError)
         }
     } catch (error) {
         next(error)

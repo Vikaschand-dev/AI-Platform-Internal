@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response } from 'express'
+﻿import { NextFunction, Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { Platform } from '../../Interface'
 import { GeneralErrorMessage } from '../../utils/constants'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
@@ -26,7 +26,7 @@ export class LoginMethodController {
     private assertEnterprisePlatform(): void {
         const platformType = getRunningExpressApp().identityManager.getPlatformType()
         if (platformType === Platform.CLOUD || platformType === Platform.OPEN_SOURCE) {
-            throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+            throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
         }
     }
 
@@ -109,14 +109,14 @@ export class LoginMethodController {
             let loginMethod: any
             if (query.id) {
                 loginMethod = await loginMethodService.readLoginMethodById(query.id, queryRunner)
-                if (!loginMethod) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, LoginMethodErrorMessage.LOGIN_METHOD_NOT_FOUND)
+                if (!loginMethod) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, LoginMethodErrorMessage.LOGIN_METHOD_NOT_FOUND)
                 if (loginMethod.organizationId !== user.activeOrganizationId) {
-                    throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+                    throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
                 }
                 loginMethod.config = await this.getSafeConfig(loginMethod.config)
             } else if (query.organizationId) {
                 if (query.organizationId !== user.activeOrganizationId) {
-                    throw new InternalFlowiseError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
+                    throw new InternalAccelanceError(StatusCodes.FORBIDDEN, GeneralErrorMessage.FORBIDDEN)
                 }
                 loginMethod = await loginMethodService.readLoginMethodByOrganizationId(query.organizationId, queryRunner)
 
@@ -125,7 +125,7 @@ export class LoginMethodController {
                 }
                 loginMethodConfig.providers = loginMethod
             } else {
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.UNHANDLED_EDGE_CASE)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, GeneralErrorMessage.UNHANDLED_EDGE_CASE)
             }
             return res.status(StatusCodes.OK).json(loginMethodConfig)
         } catch (error) {

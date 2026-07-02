@@ -1,9 +1,9 @@
-import { StatusCodes } from 'http-status-codes'
+﻿import { StatusCodes } from 'http-status-codes'
 import { Readable } from 'stream'
 import { In } from 'typeorm'
 import { Dataset } from '../../database/entities/Dataset'
 import { DatasetRow } from '../../database/entities/DatasetRow'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 
@@ -36,7 +36,7 @@ const getAllDatasets = async (workspaceId: string, page: number = -1, limit: num
             return returnObj
         }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: datasetService.getAllDatasets - ${getErrorMessage(error)}`
         )
@@ -50,7 +50,7 @@ const getDataset = async (id: string, workspaceId: string, page: number = -1, li
             id: id,
             workspaceId: workspaceId
         })
-        if (!dataset) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Dataset ${id} not found`)
+        if (!dataset) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Dataset ${id} not found`)
         const queryBuilder = appServer.AppDataSource.getRepository(DatasetRow).createQueryBuilder('dsr').orderBy('dsr.sequenceNo', 'ASC')
         queryBuilder.andWhere('dsr.datasetId = :datasetId', { datasetId: id })
         if (page > 0 && limit > 0) {
@@ -86,7 +86,7 @@ const getDataset = async (id: string, workspaceId: string, page: number = -1, li
             total
         }
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: datasetService.getDataset - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: datasetService.getDataset - ${getErrorMessage(error)}`)
     }
 }
 
@@ -100,7 +100,7 @@ const reorderDatasetRow = async (datasetId: string, rows: any[], workspaceId: st
                 const item = await entityManager.getRepository(DatasetRow).findOneBy({
                     id: row.id
                 })
-                if (!item) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Dataset Row ${row.id} not found`)
+                if (!item) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Dataset Row ${row.id} not found`)
                 item.sequenceNo = row.sequenceNo
                 await entityManager.getRepository(DatasetRow).save(item)
             }
@@ -108,7 +108,7 @@ const reorderDatasetRow = async (datasetId: string, rows: any[], workspaceId: st
         })
         return { message: 'Dataset row reordered successfully' }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: datasetService.reorderDatasetRow - ${getErrorMessage(error)}`
         )
@@ -188,7 +188,7 @@ const _csvToDatasetRows = async (datasetId: string, csvString: string, firstRowH
             }
         }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: datasetService._csvToDatasetRows - ${getErrorMessage(error)}`
         )
@@ -210,7 +210,10 @@ const createDataset = async (body: any, workspaceId: string) => {
         }
         return result
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: datasetService.createDataset - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            `Error: datasetService.createDataset - ${getErrorMessage(error)}`
+        )
     }
 }
 
@@ -222,14 +225,17 @@ const updateDataset = async (id: string, body: any, workspaceId: string) => {
             id: id,
             workspaceId: workspaceId
         })
-        if (!dataset) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Dataset ${id} not found`)
+        if (!dataset) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Dataset ${id} not found`)
 
         dataset.name = body.name
         dataset.description = body.description
         const result = await appServer.AppDataSource.getRepository(Dataset).save(dataset)
         return result
     } catch (error) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: datasetService.updateDataset - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            `Error: datasetService.updateDataset - ${getErrorMessage(error)}`
+        )
     }
 }
 
@@ -241,17 +247,20 @@ const deleteDataset = async (id: string, workspaceId: string) => {
 
         if ((result.affected ?? 0) === 0) {
             // Same response whether the id is missing or belongs to another workspace (no enumeration).
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, 'Dataset not found')
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, 'Dataset not found')
         }
 
         await appServer.AppDataSource.getRepository(DatasetRow).delete({ datasetId: id })
 
         return result
     } catch (error) {
-        if (error instanceof InternalFlowiseError) {
+        if (error instanceof InternalAccelanceError) {
             throw error
         }
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error: datasetService.deleteDataset - ${getErrorMessage(error)}`)
+        throw new InternalAccelanceError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            `Error: datasetService.deleteDataset - ${getErrorMessage(error)}`
+        )
     }
 }
 
@@ -263,7 +272,7 @@ const addDatasetRow = async (body: any) => {
             id: body.datasetId,
             workspaceId: body.workspaceId
         })
-        if (!dataset) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Dataset ${body.datasetId} not found`)
+        if (!dataset) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Dataset ${body.datasetId} not found`)
         if (body.csvFile) {
             await _csvToDatasetRows(body.datasetId, body.csvFile, body.firstRowHeaders)
             await changeUpdateOnDataset(body.datasetId, body.workspaceId)
@@ -294,7 +303,7 @@ const addDatasetRow = async (body: any) => {
             return result
         }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: datasetService.createDatasetRow - ${getErrorMessage(error)}`
         )
@@ -307,7 +316,7 @@ const changeUpdateOnDataset = async (id: string, workspaceId: string, entityMana
         id: id,
         workspaceId: workspaceId
     })
-    if (!dataset) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Dataset ${id} not found`)
+    if (!dataset) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Dataset ${id} not found`)
 
     dataset.updatedDate = new Date()
     if (entityManager) {
@@ -324,13 +333,13 @@ const updateDatasetRow = async (id: string, body: any) => {
         const item = await appServer.AppDataSource.getRepository(DatasetRow).findOneBy({
             id: id
         })
-        if (!item) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Dataset Row ${id} not found`)
+        if (!item) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Dataset Row ${id} not found`)
 
         const dataset = await appServer.AppDataSource.getRepository(Dataset).findOneBy({
             id: item.datasetId,
             workspaceId: body.workspaceId
         })
-        if (!dataset) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Dataset Row ${id} not found`)
+        if (!dataset) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Dataset Row ${id} not found`)
 
         item.input = body.input
         item.output = body.output
@@ -338,7 +347,7 @@ const updateDatasetRow = async (id: string, body: any) => {
         await changeUpdateOnDataset(item.datasetId, body.workspaceId)
         return result
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: datasetService.updateDatasetRow - ${getErrorMessage(error)}`
         )
@@ -353,14 +362,14 @@ const deleteDatasetRow = async (id: string, workspaceId: string) => {
             const item = await entityManager.getRepository(DatasetRow).findOneBy({
                 id: id
             })
-            if (!item) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Dataset Row ${id} not found`)
+            if (!item) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Dataset Row ${id} not found`)
 
             const result = await entityManager.getRepository(DatasetRow).delete({ id: id })
             await changeUpdateOnDataset(item.datasetId, workspaceId, entityManager)
             return result
         })
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: datasetService.deleteDatasetRow - ${getErrorMessage(error)}`
         )
@@ -384,7 +393,7 @@ const patchDeleteRows = async (ids: string[] = [], workspaceId: string) => {
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: datasetService.patchDeleteRows - ${getErrorMessage(error)}`
         )

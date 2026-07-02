@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express'
+﻿import { Request, Response, NextFunction } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { v4 as uuidv4 } from 'uuid'
 import { RateLimiterManager } from '../../utils/rateLimit'
@@ -8,7 +8,7 @@ import webhookService from '../../services/webhook'
 import { getWebhookListenerRegistry } from '../../services/webhook-listener'
 import { redactSensitiveHeaders } from 'accelance-components'
 import { ChatType } from '../../Interface'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { dispatchCallback } from '../../utils/callbackDispatcher'
 import { getErrorMessage } from '../../errors/utils'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
@@ -17,7 +17,7 @@ import logger from '../../utils/logger'
 const createWebhook = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(StatusCodes.PRECONDITION_FAILED, `Error: webhookController.createWebhook - id not provided!`)
+            throw new InternalAccelanceError(StatusCodes.PRECONDITION_FAILED, `Error: webhookController.createWebhook - id not provided!`)
         }
 
         const workspaceId = req.user?.activeWorkspaceId
@@ -107,7 +107,7 @@ const createWebhook = async (req: Request, res: Response, next: NextFunction) =>
                     const parsed = new URL(callbackUrl)
                     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error()
                 } catch {
-                    throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, `Invalid callbackUrl: must be a valid http or https URL`)
+                    throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, `Invalid callbackUrl: must be a valid http or https URL`)
                 }
             }
 

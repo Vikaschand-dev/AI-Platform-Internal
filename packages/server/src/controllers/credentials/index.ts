@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from 'express'
+﻿import { Request, Response, NextFunction } from 'express'
 import credentialsService from '../../services/credentials'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { StatusCodes } from 'http-status-codes'
 
 const createCredential = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.body) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: credentialsController.createCredential - body not provided!`
             )
@@ -23,14 +23,14 @@ const createCredential = async (req: Request, res: Response, next: NextFunction)
 const deleteCredentials = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: credentialsController.deleteCredentials - id not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: credentialsController.deleteCredentials - workspace ${workspaceId} not found!`
             )
@@ -46,7 +46,7 @@ const getAllCredentials = async (req: Request, res: Response, next: NextFunction
     try {
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: credentialsController.getAllCredentials - workspace ${workspaceId} not found!`
             )
@@ -61,14 +61,14 @@ const getAllCredentials = async (req: Request, res: Response, next: NextFunction
 const getCredentialById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: credentialsController.getCredentialById - id not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: credentialsController.getCredentialById - workspace ${workspaceId} not found!`
             )
@@ -83,14 +83,14 @@ const getCredentialById = async (req: Request, res: Response, next: NextFunction
 const revealCredentialById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: credentialsController.revealCredentialById - id not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: credentialsController.revealCredentialById - workspace ${workspaceId} not found!`
             )
@@ -105,20 +105,20 @@ const revealCredentialById = async (req: Request, res: Response, next: NextFunct
 const updateCredential = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: credentialsController.updateCredential - id not provided!`
             )
         }
         if (!req.body) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: credentialsController.updateCredential - body not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: credentialsController.updateCredential - workspace ${workspaceId} not found!`
             )

@@ -1,6 +1,6 @@
-import { NextFunction, Request, Response } from 'express'
+﻿import { NextFunction, Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { CustomMcpServerAuthType } from '../../Interface'
 import customMcpServersService from '../../services/custom-mcp-servers'
 import { getPageAndLimitParams } from '../../utils/pagination'
@@ -13,7 +13,7 @@ const assertValidAuthType = (authType: unknown, endpoint: string): void => {
     if (authType === undefined) return
     const allowed = Object.values(CustomMcpServerAuthType) as string[]
     if (typeof authType !== 'string' || !allowed.includes(authType)) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.BAD_REQUEST,
             `Error: customMcpServersController.${endpoint} - invalid authType "${String(authType)}"`
         )
@@ -23,21 +23,21 @@ const assertValidAuthType = (authType: unknown, endpoint: string): void => {
 const createCustomMcpServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (!req.body) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: customMcpServersController.createCustomMcpServer - body not provided!`
             )
         }
         const orgId = req.user?.activeOrganizationId
         if (!orgId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: customMcpServersController.createCustomMcpServer - organization not found!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: customMcpServersController.createCustomMcpServer - workspace not found!`
             )
@@ -65,7 +65,7 @@ const getAllCustomMcpServers = async (req: Request, res: Response, next: NextFun
     try {
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: customMcpServersController.getAllCustomMcpServers - workspace not found!`
             )
@@ -83,14 +83,14 @@ const getAllCustomMcpServers = async (req: Request, res: Response, next: NextFun
 const getCustomMcpServerById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: customMcpServersController.getCustomMcpServerById - id not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: customMcpServersController.getCustomMcpServerById - workspace not found!`
             )
@@ -105,20 +105,20 @@ const getCustomMcpServerById = async (req: Request, res: Response, next: NextFun
 const updateCustomMcpServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: customMcpServersController.updateCustomMcpServer - id not provided!`
             )
         }
         if (!req.body) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: customMcpServersController.updateCustomMcpServer - body not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: customMcpServersController.updateCustomMcpServer - workspace not found!`
             )
@@ -144,14 +144,14 @@ const updateCustomMcpServer = async (req: Request, res: Response, next: NextFunc
 const deleteCustomMcpServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: customMcpServersController.deleteCustomMcpServer - id not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: customMcpServersController.deleteCustomMcpServer - workspace not found!`
             )
@@ -166,14 +166,14 @@ const deleteCustomMcpServer = async (req: Request, res: Response, next: NextFunc
 const authorizeCustomMcpServer = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: customMcpServersController.authorizeCustomMcpServer - id not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: customMcpServersController.authorizeCustomMcpServer - workspace not found!`
             )
@@ -188,14 +188,14 @@ const authorizeCustomMcpServer = async (req: Request, res: Response, next: NextF
 const getDiscoveredTools = async (req: Request, res: Response, next: NextFunction) => {
     try {
         if (typeof req.params === 'undefined' || !req.params.id) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: customMcpServersController.getDiscoveredTools - id not provided!`
             )
         }
         const workspaceId = req.user?.activeWorkspaceId
         if (!workspaceId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 `Error: customMcpServersController.getDiscoveredTools - workspace not found!`
             )

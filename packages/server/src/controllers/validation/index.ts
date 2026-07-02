@@ -1,13 +1,13 @@
-import { Request, Response, NextFunction } from 'express'
+﻿import { Request, Response, NextFunction } from 'express'
 import validationService from '../../services/validation'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { StatusCodes } from 'http-status-codes'
 
 const checkFlowValidation = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const flowId = req.params?.id as string | undefined
         if (!flowId) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.PRECONDITION_FAILED,
                 `Error: validationController.checkFlowValidation - id not provided!`
             )

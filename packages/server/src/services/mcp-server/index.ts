@@ -1,8 +1,8 @@
-import { StatusCodes } from 'http-status-codes'
+﻿import { StatusCodes } from 'http-status-codes'
 import crypto from 'crypto'
 import { z } from 'zod/v3'
 import { ChatFlow } from '../../database/entities/ChatFlow'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 import { IMcpServerConfig } from '../../Interface'
@@ -27,7 +27,7 @@ const updateConfigSchema = z.object({
 function validateWithZod<T>(schema: z.ZodSchema<T>, data: unknown): T {
     const result = schema.safeParse(data)
     if (!result.success) {
-        throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, result.error.errors[0].message)
+        throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, result.error.errors[0].message)
     }
     return result.data
 }
@@ -61,13 +61,13 @@ const getMcpServerConfig = async (chatflowId: string, workspaceId: string): Prom
             where: { id: chatflowId, workspaceId }
         })
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         }
         const config = parseMcpConfig(chatflow)
         return config || { enabled: false, token: '', description: '', toolName: '' }
     } catch (error) {
-        if (error instanceof InternalFlowiseError) throw error
-        throw new InternalFlowiseError(
+        if (error instanceof InternalAccelanceError) throw error
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: mcpServerService.getMcpServerConfig - ${getErrorMessage(error)}`
         )
@@ -88,7 +88,7 @@ const createMcpServerConfig = async (
             where: { id: chatflowId, workspaceId }
         })
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         }
 
         // If already has an MCP config, return it
@@ -111,8 +111,8 @@ const createMcpServerConfig = async (
 
         return config
     } catch (error) {
-        if (error instanceof InternalFlowiseError) throw error
-        throw new InternalFlowiseError(
+        if (error instanceof InternalAccelanceError) throw error
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: mcpServerService.createMcpServerConfig - ${getErrorMessage(error)}`
         )
@@ -133,12 +133,12 @@ const updateMcpServerConfig = async (
             where: { id: chatflowId, workspaceId }
         })
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         }
 
         const existing = parseMcpConfig(chatflow)
         if (!existing) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `MCP server config not found for ID: ${chatflowId}`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `MCP server config not found for ID: ${chatflowId}`)
         }
 
         validateWithZod(updateConfigSchema, body)
@@ -152,8 +152,8 @@ const updateMcpServerConfig = async (
 
         return existing
     } catch (error) {
-        if (error instanceof InternalFlowiseError) throw error
-        throw new InternalFlowiseError(
+        if (error instanceof InternalAccelanceError) throw error
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: mcpServerService.updateMcpServerConfig - ${getErrorMessage(error)}`
         )
@@ -170,7 +170,7 @@ const deleteMcpServerConfig = async (chatflowId: string, workspaceId: string): P
             where: { id: chatflowId, workspaceId }
         })
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         }
 
         const existing = parseMcpConfig(chatflow)
@@ -180,8 +180,8 @@ const deleteMcpServerConfig = async (chatflowId: string, workspaceId: string): P
         chatflow.mcpServerConfig = JSON.stringify(existing)
         await appServer.AppDataSource.getRepository(ChatFlow).save(chatflow)
     } catch (error) {
-        if (error instanceof InternalFlowiseError) throw error
-        throw new InternalFlowiseError(
+        if (error instanceof InternalAccelanceError) throw error
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: mcpServerService.deleteMcpServerConfig - ${getErrorMessage(error)}`
         )
@@ -198,12 +198,12 @@ const refreshMcpToken = async (chatflowId: string, workspaceId: string): Promise
             where: { id: chatflowId, workspaceId }
         })
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         }
 
         const existing = parseMcpConfig(chatflow)
         if (!existing) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `MCP server config not found for ID: ${chatflowId}`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `MCP server config not found for ID: ${chatflowId}`)
         }
 
         existing.token = generateToken()
@@ -212,8 +212,8 @@ const refreshMcpToken = async (chatflowId: string, workspaceId: string): Promise
 
         return existing
     } catch (error) {
-        if (error instanceof InternalFlowiseError) throw error
-        throw new InternalFlowiseError(
+        if (error instanceof InternalAccelanceError) throw error
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: mcpServerService.refreshMcpToken - ${getErrorMessage(error)}`
         )
@@ -231,25 +231,25 @@ const getChatflowByIdAndVerifyToken = async (chatflowId: string, token: string):
         })
 
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, 'MCP server not found')
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, 'MCP server not found')
         }
 
         const config = parseMcpConfig(chatflow)
         if (!config || !config.enabled || !config.token) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, 'MCP server not found')
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, 'MCP server not found')
         }
 
         // Constant-time comparison to prevent timing attacks
         const storedBuffer = Buffer.from(config.token, 'utf8')
         const providedBuffer = Buffer.from(token, 'utf8')
         if (storedBuffer.length !== providedBuffer.length || !crypto.timingSafeEqual(storedBuffer, providedBuffer)) {
-            throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, 'Invalid token')
+            throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, 'Invalid token')
         }
 
         return chatflow
     } catch (error) {
-        if (error instanceof InternalFlowiseError) throw error
-        throw new InternalFlowiseError(
+        if (error instanceof InternalAccelanceError) throw error
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: mcpServerService.getChatflowByIdAndVerifyToken - ${getErrorMessage(error)}`
         )

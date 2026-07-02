@@ -1,10 +1,10 @@
-import { randomBytes } from 'crypto'
+﻿import { randomBytes } from 'crypto'
 import { ICommonObject, removeFolderFromStorage } from 'accelance-components'
 import { StatusCodes } from 'http-status-codes'
 import { Brackets, In, QueryRunner } from 'typeorm'
 import { validate as isValidUUID } from 'uuid'
 import { ChatflowType, IReactFlowObject, ScheduleInputMode, StartInputType } from '../../Interface'
-import { FLOWISE_COUNTER_STATUS, FLOWISE_METRIC_COUNTERS } from '../../Interface.Metrics'
+import { ACCELANCE_COUNTER_STATUS, ACCELANCE_METRIC_COUNTERS } from '../../Interface.Metrics'
 import { UsageCacheManager } from '../../UsageCacheManager'
 import { ChatFlow, EnumChatflowType } from '../../database/entities/ChatFlow'
 import { ChatMessage } from '../../database/entities/ChatMessage'
@@ -13,7 +13,7 @@ import { ScheduleTriggerType } from '../../database/entities/ScheduleRecord'
 import { UpsertHistory } from '../../database/entities/UpsertHistory'
 import { Workspace } from '../../enterprise/database/entities/workspace.entity'
 import { getWorkspaceSearchOptions } from '../../enterprise/utils/ControllerServiceUtils'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import { getErrorMessage } from '../../errors/utils'
 import { ScheduleBeat } from '../../schedule/ScheduleBeat'
 import documentStoreService from '../../services/documentstore'
@@ -43,7 +43,7 @@ export const enum ChatflowErrorMessage {
 
 export function validateChatflowType(type: ChatflowType | undefined) {
     if (!Object.values(EnumChatflowType).includes(type as EnumChatflowType))
-        throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, ChatflowErrorMessage.INVALID_CHATFLOW_TYPE)
+        throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, ChatflowErrorMessage.INVALID_CHATFLOW_TYPE)
 }
 
 // Check if chatflow valid for streaming
@@ -55,7 +55,7 @@ const checkIfChatflowIsValidForStreaming = async (chatflowId: string): Promise<a
             id: chatflowId
         })
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         }
 
         /* Check for post-processing settings, if available isStreamValid is always false */
@@ -99,7 +99,7 @@ const checkIfChatflowIsValidForStreaming = async (chatflowId: string): Promise<a
         const dbResponse = { isStreaming: isStreaming }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.checkIfChatflowIsValidForStreaming - ${getErrorMessage(error)}`
         )
@@ -112,7 +112,7 @@ const checkIfChatflowIsValidForUploads = async (chatflowId: string): Promise<any
         const dbResponse = await utilGetUploadsConfig(chatflowId)
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.checkIfChatflowIsValidForUploads - ${getErrorMessage(error)}`
         )
@@ -130,7 +130,7 @@ const deleteChatflow = async (
 
         const chatflow = await getChatflowById(chatflowId, workspaceId)
         if (!userPermittedTypes.includes(chatflow.type as EnumChatflowType))
-            throw new InternalFlowiseError(StatusCodes.FORBIDDEN, `You do not have permission to delete this chatflow type`)
+            throw new InternalAccelanceError(StatusCodes.FORBIDDEN, `You do not have permission to delete this chatflow type`)
 
         const dbResponse = await appServer.AppDataSource.getRepository(ChatFlow).delete({ id: chatflowId })
 
@@ -163,7 +163,7 @@ const deleteChatflow = async (
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.deleteChatflow - ${getErrorMessage(error)}`
         )
@@ -201,7 +201,7 @@ const getAllChatflows = async (type?: ChatflowType, workspaceId?: string, page: 
             return data
         }
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.getAllChatflows - ${getErrorMessage(error)}`
         )
@@ -221,7 +221,7 @@ async function getAllChatflowsCountByOrganization(type: ChatflowType, organizati
 
         return chatflowsCount
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.getAllChatflowsCountByOrganization - ${getErrorMessage(error)}`
         )
@@ -241,7 +241,7 @@ const getAllChatflowsCount = async (type?: ChatflowType, workspaceId?: string): 
         const dbResponse = await appServer.AppDataSource.getRepository(ChatFlow).countBy(getWorkspaceSearchOptions(workspaceId))
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.getAllChatflowsCount - ${getErrorMessage(error)}`
         )
@@ -266,11 +266,11 @@ const getChatflowByApiKey = async (apiKeyId: string, workspaceId: string, keyonl
 
         const dbResponse = await query.orderBy('cf.name', 'ASC').getMany()
         if (dbResponse.length < 1) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow not found in the database!`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow not found in the database!`)
         }
         return dbResponse
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.getChatflowByApiKey - ${getErrorMessage(error)}`
         )
@@ -280,7 +280,7 @@ const getChatflowByApiKey = async (apiKeyId: string, workspaceId: string, keyonl
 const getChatflowById = async (chatflowId: string, workspaceId?: string): Promise<any> => {
     try {
         if (!isValidUUID(chatflowId)) {
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, ChatflowErrorMessage.INVALID_CHATFLOW_ID)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, ChatflowErrorMessage.INVALID_CHATFLOW_ID)
         }
         const appServer = getRunningExpressApp()
         const dbResponse = await appServer.AppDataSource.getRepository(ChatFlow).findOne({
@@ -290,14 +290,14 @@ const getChatflowById = async (chatflowId: string, workspaceId?: string): Promis
             }
         })
         if (!dbResponse) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found in the database!`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found in the database!`)
         }
         return dbResponse
     } catch (error) {
-        if (error instanceof InternalFlowiseError) {
+        if (error instanceof InternalAccelanceError) {
             throw error
         }
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.getChatflowById - ${getErrorMessage(error)}`
         )
@@ -307,7 +307,7 @@ const getChatflowById = async (chatflowId: string, workspaceId?: string): Promis
 /** Resolves a chatflow only if it belongs to the given workspace; rejects when workspaceId is missing (prevents unscoped lookup). */
 const getChatflowByIdForWorkspace = async (chatflowId: string, workspaceId: string | undefined): Promise<any> => {
     if (!workspaceId) {
-        throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, ChatflowErrorMessage.WORKSPACE_ID_REQUIRED)
+        throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, ChatflowErrorMessage.WORKSPACE_ID_REQUIRED)
     }
     return getChatflowById(chatflowId, workspaceId)
 }
@@ -318,7 +318,7 @@ const assertChatflowIdsInWorkspace = async (chatflowIds: string[], workspaceId: 
         if (chatflowIds.length === 0) return
         for (const id of chatflowIds) {
             if (!isValidUUID(id)) {
-                throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, ChatflowErrorMessage.INVALID_CHATFLOW_ID)
+                throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, ChatflowErrorMessage.INVALID_CHATFLOW_ID)
             }
         }
         const appServer = getRunningExpressApp()
@@ -328,16 +328,16 @@ const assertChatflowIdsInWorkspace = async (chatflowIds: string[], workspaceId: 
             select: ['id']
         })
         if (found.length !== chatflowIds.length) {
-            throw new InternalFlowiseError(
+            throw new InternalAccelanceError(
                 StatusCodes.NOT_FOUND,
                 'Error: chatflowsService.assertChatflowIdsInWorkspace - one or more chatflows were not found in the workspace!'
             )
         }
     } catch (error) {
-        if (error instanceof InternalFlowiseError) {
+        if (error instanceof InternalAccelanceError) {
             throw error
         }
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.assertChatflowIdsInWorkspace - ${getErrorMessage(error)}`
         )
@@ -392,7 +392,7 @@ const saveChatflow = async (
         if (startInputType === 'scheduleInput') {
             const scheduleInputMode = startNode?.data?.inputs?.scheduleInputMode as ScheduleInputMode | undefined
             if (!scheduleInputMode) {
-                throw new InternalFlowiseError(
+                throw new InternalAccelanceError(
                     StatusCodes.BAD_REQUEST,
                     'Schedule Input Mode is required on the Start node when Start Input Type is Schedule.'
                 )
@@ -444,8 +444,8 @@ const saveChatflow = async (
     )
 
     appServer.metricsProvider?.incrementCounter(
-        dbResponse?.type === 'MULTIAGENT' ? FLOWISE_METRIC_COUNTERS.AGENTFLOW_CREATED : FLOWISE_METRIC_COUNTERS.CHATFLOW_CREATED,
-        { status: FLOWISE_COUNTER_STATUS.SUCCESS }
+        dbResponse?.type === 'MULTIAGENT' ? ACCELANCE_METRIC_COUNTERS.AGENTFLOW_CREATED : ACCELANCE_METRIC_COUNTERS.CHATFLOW_CREATED,
+        { status: ACCELANCE_COUNTER_STATUS.SUCCESS }
     )
 
     return dbResponse
@@ -486,7 +486,7 @@ const updateChatflow = async (
         } catch (error) {
             const message = getErrorMessage(error)
             logger.error(`[server]: Invalid chatbotConfig JSON in updateChatflow: ${message}`)
-            throw new InternalFlowiseError(StatusCodes.BAD_REQUEST, `Invalid chatbotConfig: ${message}`)
+            throw new InternalAccelanceError(StatusCodes.BAD_REQUEST, `Invalid chatbotConfig: ${message}`)
         }
     }
     const newDbChatflow = appServer.AppDataSource.getRepository(ChatFlow).merge(chatflow, updateChatFlow)
@@ -504,7 +504,7 @@ const updateChatflow = async (
         if (startInputType === 'scheduleInput') {
             const scheduleInputMode = startNode?.data?.inputs?.scheduleInputMode as ScheduleInputMode | undefined
             if (!scheduleInputMode) {
-                throw new InternalFlowiseError(
+                throw new InternalAccelanceError(
                     StatusCodes.BAD_REQUEST,
                     'Schedule Input Mode is required on the Start node when Start Input Type is Schedule.'
                 )
@@ -562,7 +562,7 @@ const getSinglePublicChatbotConfig = async (chatflowId: string): Promise<any> =>
             id: chatflowId
         })
         if (!dbResponse) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         }
         const uploadsConfig = await utilGetUploadsConfig(chatflowId)
         // even if chatbotConfig is not set but uploads are enabled
@@ -590,12 +590,15 @@ const getSinglePublicChatbotConfig = async (chatflowId: string): Promise<any> =>
                     isTTSEnabled
                 }
             } catch (e) {
-                throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, `Error parsing Chatbot Config for Chatflow ${chatflowId}`)
+                throw new InternalAccelanceError(
+                    StatusCodes.INTERNAL_SERVER_ERROR,
+                    `Error parsing Chatbot Config for Chatflow ${chatflowId}`
+                )
             }
         }
         return 'OK'
     } catch (error) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.getSinglePublicChatbotConfig - ${getErrorMessage(error)}`
         )
@@ -618,14 +621,14 @@ const checkIfChatflowHasChanged = async (chatflowId: string, lastUpdatedDateTime
     try {
         const chatflow = await getChatflowByIdForWorkspace(chatflowId, workspaceId)
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         }
         return { hasChanged: chatflow.updatedDate.toISOString() !== lastUpdatedDateTime }
     } catch (error) {
-        if (error instanceof InternalFlowiseError) {
+        if (error instanceof InternalAccelanceError) {
             throw error
         }
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.checkIfChatflowHasChanged - ${getErrorMessage(error)}`
         )
@@ -637,15 +640,15 @@ const setWebhookSecret = async (chatflowId: string, workspaceId: string): Promis
         const appServer = getRunningExpressApp()
         const repo = appServer.AppDataSource.getRepository(ChatFlow)
         const chatflow = await repo.findOne({ where: { id: chatflowId, workspaceId } })
-        if (!chatflow) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+        if (!chatflow) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         const plaintext = randomBytes(32).toString('hex')
         chatflow.webhookSecret = await encryptCredentialData({ secret: plaintext })
         chatflow.webhookSecretConfigured = true
         await repo.save(chatflow)
         return { webhookSecret: plaintext }
     } catch (error) {
-        if (error instanceof InternalFlowiseError) throw error
-        throw new InternalFlowiseError(
+        if (error instanceof InternalAccelanceError) throw error
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.setWebhookSecret - ${getErrorMessage(error)}`
         )
@@ -657,13 +660,13 @@ const clearWebhookSecret = async (chatflowId: string, workspaceId: string): Prom
         const appServer = getRunningExpressApp()
         const repo = appServer.AppDataSource.getRepository(ChatFlow)
         const chatflow = await repo.findOne({ where: { id: chatflowId, workspaceId } })
-        if (!chatflow) throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
+        if (!chatflow) throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowId} not found`)
         chatflow.webhookSecret = null
         chatflow.webhookSecretConfigured = false
         await repo.save(chatflow)
     } catch (error) {
-        if (error instanceof InternalFlowiseError) throw error
-        throw new InternalFlowiseError(
+        if (error instanceof InternalAccelanceError) throw error
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.clearWebhookSecret - ${getErrorMessage(error)}`
         )
@@ -684,8 +687,8 @@ const getWebhookSecret = async (chatflowId: string, workspaceId: string): Promis
         const decrypted = await decryptCredentialData(stored)
         return (decrypted?.secret as string | undefined) ?? null
     } catch (error) {
-        if (error instanceof InternalFlowiseError) throw error
-        throw new InternalFlowiseError(
+        if (error instanceof InternalAccelanceError) throw error
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             `Error: chatflowsService.getWebhookSecret - ${getErrorMessage(error)}`
         )

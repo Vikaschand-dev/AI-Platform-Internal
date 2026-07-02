@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Unit tests for chatflowsService.saveChatflow and chatflowsService.updateChatflow.
  * All infrastructure (TypeORM, ScheduleService, ScheduleBeat, telemetry, etc.)
  * is mocked — no DB or Express app required.
@@ -52,11 +52,11 @@ jest.mock('../../database/entities/ScheduleRecord', () => ({
 }))
 jest.mock('../../enterprise/database/entities/workspace.entity', () => ({ Workspace: class Workspace {} }))
 jest.mock('../../enterprise/utils/ControllerServiceUtils', () => ({ getWorkspaceSearchOptions: jest.fn().mockReturnValue({}) }))
-jest.mock('../../errors/internalFlowiseError', () => ({
-    InternalFlowiseError: class InternalFlowiseError extends Error {
+jest.mock('../../errors/internalAccelanceError', () => ({
+    InternalAccelanceError: class InternalAccelanceError extends Error {
         constructor(public statusCode: number, message: string) {
             super(message)
-            this.name = 'InternalFlowiseError'
+            this.name = 'InternalAccelanceError'
         }
     }
 }))

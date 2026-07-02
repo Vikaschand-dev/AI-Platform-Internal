@@ -1,4 +1,4 @@
-import { Request } from 'express'
+﻿import { Request } from 'express'
 import {
     addArrayFilesToStorage,
     getFileFromUpload,
@@ -12,14 +12,14 @@ import { cloneDeep, omit } from 'lodash'
 import * as path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { ChatType, IExecuteFlowParams, IncomingInput, INodeDirectedGraph, IReactFlowObject, MODE } from '../Interface'
-import { FLOWISE_COUNTER_STATUS, FLOWISE_METRIC_COUNTERS } from '../Interface.Metrics'
+import { ACCELANCE_COUNTER_STATUS, ACCELANCE_METRIC_COUNTERS } from '../Interface.Metrics'
 import { ChatFlow } from '../database/entities/ChatFlow'
 import { UpsertHistory } from '../database/entities/UpsertHistory'
 import { Variable } from '../database/entities/Variable'
 import { Organization } from '../enterprise/database/entities/organization.entity'
 import { Workspace } from '../enterprise/database/entities/workspace.entity'
 import { getWorkspaceSearchOptions } from '../enterprise/utils/ControllerServiceUtils'
-import { InternalFlowiseError } from '../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../errors/internalAccelanceError'
 import { getErrorMessage } from '../errors/utils'
 import {
     buildFlow,
@@ -141,21 +141,21 @@ export const executeUpsert = async ({
     const vsNodes = nodes.filter((node) => node.data.category === 'Vector Stores')
     const vsNodesWithFileUpload = vsNodes.filter((node) => node.data.inputs?.fileUpload)
     if (vsNodesWithFileUpload.length > 1) {
-        throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, 'Multiple vector store nodes with fileUpload enabled')
+        throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, 'Multiple vector store nodes with fileUpload enabled')
     } else if (vsNodesWithFileUpload.length === 1 && !stopNodeId) {
         stopNodeId = vsNodesWithFileUpload[0].data.id
     }
 
     /*** Check if multiple vector store nodes exist, and if stopNodeId is specified ***/
     if (vsNodes.length > 1 && !stopNodeId) {
-        throw new InternalFlowiseError(
+        throw new InternalAccelanceError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             'There are multiple vector nodes, please provide stopNodeId in body request'
         )
     } else if (vsNodes.length === 1 && !stopNodeId) {
         stopNodeId = vsNodes[0].data.id
     } else if (!vsNodes.length && !stopNodeId) {
-        throw new InternalFlowiseError(StatusCodes.NOT_FOUND, 'No vector node found')
+        throw new InternalAccelanceError(StatusCodes.NOT_FOUND, 'No vector node found')
     }
 
     /*** Get Starting Nodes with Reversed Graph ***/
@@ -246,7 +246,7 @@ export const upsertVector = async (req: Request, isInternal: boolean = false) =>
             id: chatflowid
         })
         if (!chatflow) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowid} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Chatflow ${chatflowid} not found`)
         }
 
         const httpProtocol = req.get('x-forwarded-proto') || req.protocol
@@ -258,7 +258,7 @@ export const upsertVector = async (req: Request, isInternal: boolean = false) =>
         if (!isInternal) {
             const isKeyValidated = await validateFlowAPIKey(req, chatflow)
             if (!isKeyValidated) {
-                throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, `Unauthorized`)
+                throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, `Unauthorized`)
             }
         }
 
@@ -267,17 +267,17 @@ export const upsertVector = async (req: Request, isInternal: boolean = false) =>
             id: chatflowWorkspaceId
         })
         if (!workspace) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Workspace ${chatflowWorkspaceId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Workspace ${chatflowWorkspaceId} not found`)
         }
         const workspaceId = workspace.id
 
-        if (workspaceId !== req.user?.activeWorkspaceId) throw new InternalFlowiseError(StatusCodes.UNAUTHORIZED, 'Unauthorized')
+        if (workspaceId !== req.user?.activeWorkspaceId) throw new InternalAccelanceError(StatusCodes.UNAUTHORIZED, 'Unauthorized')
 
         const org = await appServer.AppDataSource.getRepository(Organization).findOneBy({
             id: workspace.organizationId
         })
         if (!org) {
-            throw new InternalFlowiseError(StatusCodes.NOT_FOUND, `Organization ${workspace.organizationId} not found`)
+            throw new InternalAccelanceError(StatusCodes.NOT_FOUND, `Organization ${workspace.organizationId} not found`)
         }
 
         const orgId = org.id
@@ -317,26 +317,28 @@ export const upsertVector = async (req: Request, isInternal: boolean = false) =>
                 throw new Error('Job execution failed')
             }
 
-            appServer.metricsProvider?.incrementCounter(FLOWISE_METRIC_COUNTERS.VECTORSTORE_UPSERT, {
-                status: FLOWISE_COUNTER_STATUS.SUCCESS
+            appServer.metricsProvider?.incrementCounter(ACCELANCE_METRIC_COUNTERS.VECTORSTORE_UPSERT, {
+                status: ACCELANCE_COUNTER_STATUS.SUCCESS
             })
             return result
         } else {
             const result = await executeUpsert(executeData)
 
-            appServer.metricsProvider?.incrementCounter(FLOWISE_METRIC_COUNTERS.VECTORSTORE_UPSERT, {
-                status: FLOWISE_COUNTER_STATUS.SUCCESS
+            appServer.metricsProvider?.incrementCounter(ACCELANCE_METRIC_COUNTERS.VECTORSTORE_UPSERT, {
+                status: ACCELANCE_COUNTER_STATUS.SUCCESS
             })
             return result
         }
     } catch (e) {
         logger.error('[server]: Error:', e)
-        appServer.metricsProvider?.incrementCounter(FLOWISE_METRIC_COUNTERS.VECTORSTORE_UPSERT, { status: FLOWISE_COUNTER_STATUS.FAILURE })
+        appServer.metricsProvider?.incrementCounter(ACCELANCE_METRIC_COUNTERS.VECTORSTORE_UPSERT, {
+            status: ACCELANCE_COUNTER_STATUS.FAILURE
+        })
 
-        if (e instanceof InternalFlowiseError && e.statusCode === StatusCodes.UNAUTHORIZED) {
+        if (e instanceof InternalAccelanceError && e.statusCode === StatusCodes.UNAUTHORIZED) {
             throw e
         } else {
-            throw new InternalFlowiseError(StatusCodes.INTERNAL_SERVER_ERROR, getErrorMessage(e))
+            throw new InternalAccelanceError(StatusCodes.INTERNAL_SERVER_ERROR, getErrorMessage(e))
         }
     }
 }

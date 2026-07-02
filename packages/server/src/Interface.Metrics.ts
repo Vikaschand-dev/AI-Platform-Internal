@@ -2,15 +2,15 @@ export interface IMetricsProvider {
     getName(): string
     initializeCounters(): void
     setupMetricsEndpoint(): void
-    incrementCounter(counter: FLOWISE_METRIC_COUNTERS, payload: any): void
+    incrementCounter(counter: ACCELANCE_METRIC_COUNTERS, payload: any): void
 }
 
-export enum FLOWISE_COUNTER_STATUS {
+export enum ACCELANCE_COUNTER_STATUS {
     SUCCESS = 'success',
     FAILURE = 'failure'
 }
 
-export enum FLOWISE_METRIC_COUNTERS {
+export enum ACCELANCE_METRIC_COUNTERS {
     CHATFLOW_CREATED = 'chatflow_created',
     AGENTFLOW_CREATED = 'agentflow_created',
     ASSISTANT_CREATED = 'assistant_created',

@@ -4,6 +4,29 @@ All structural changes to the project are logged here in reverse chronological o
 
 ---
 
+## 2026-07-02 — Rebranding Phase 6: Server Internal Code
+
+**Goal:** Rename internal server error class and metrics identifiers from Flowise → Accelance.
+
+**Changes:**
+
+-   `packages/server/src/errors/internalFlowiseError/` folder renamed to `internalAccelanceError/`
+-   `packages/server/src/errors/internalAccelanceError/index.ts`: class `InternalFlowiseError` → `InternalAccelanceError`
+-   124 server `.ts` files: `InternalFlowiseError`/`internalFlowiseError` → `InternalAccelanceError`/`internalAccelanceError`
+-   12 server `.ts` files: `FLOWISE_METRIC_COUNTERS`→`ACCELANCE_METRIC_COUNTERS`, `FLOWISE_COUNTER_STATUS`→`ACCELANCE_COUNTER_STATUS`
+-   `packages/server/src/Interface.Metrics.ts`: enum names updated
+-   `packages/server/src/metrics/Prometheus.ts`: metric names + prefix `flowise_`→`accelance_`
+-   `packages/server/src/metrics/OpenTelemetry.ts`: metric names
+-   `packages/server/src/DataSource.ts`: `.flowise`→`.accelance` default path
+-   `packages/server/src/utils/index.ts`: `.flowise`→`.accelance` (×3 default paths)
+-   `packages/server/src/enterprise/middleware/passport/SessionPersistance.ts`: `.flowise`→`.accelance`
+
+**Known issue fixed:** PowerShell case-insensitive `-replace` produced `errors/InternalAccelanceError` (capital I) in import paths; fixed via case-sensitive `-creplace` across 123 files.
+
+**Build result:** 7/7 tasks successful ✓
+
+---
+
 ## 2026-07-01 — Accelance Brand Theme
 
 **Goal:** Replace Flowise's default violet/purple theme with Accelance's blue+teal brand palette.

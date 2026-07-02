@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Unit tests for schedule service (index.ts) — server-side / DB logic.
  * All TypeORM repositories and external dependencies are mocked so no real
  * database or Express app is required.
@@ -40,11 +40,11 @@ jest.mock('../../database/entities/ScheduleTriggerLog', () => ({
     }
 }))
 jest.mock('../../database/entities/ChatFlow', () => ({ ChatFlow: class ChatFlow {} }))
-jest.mock('../../errors/internalFlowiseError', () => ({
-    InternalFlowiseError: class InternalFlowiseError extends Error {
+jest.mock('../../errors/internalAccelanceError', () => ({
+    InternalAccelanceError: class InternalAccelanceError extends Error {
         constructor(public statusCode: number, message: string) {
             super(message)
-            this.name = 'InternalFlowiseError'
+            this.name = 'InternalAccelanceError'
         }
     }
 }))
@@ -66,7 +66,7 @@ jest.mock('../../utils/logger', () => ({
 import { getRunningExpressApp } from '../../utils/getRunningExpressApp'
 import { ScheduleTriggerType } from '../../database/entities/ScheduleRecord'
 import { ScheduleTriggerStatus } from '../../database/entities/ScheduleTriggerLog'
-import { InternalFlowiseError } from '../../errors/internalFlowiseError'
+import { InternalAccelanceError } from '../../errors/internalAccelanceError'
 import scheduleService from './index'
 
 // Expose the typed mock for convenience
@@ -194,14 +194,14 @@ describe('createOrUpdateSchedule', () => {
         expect(mockRepo.create).toHaveBeenCalledWith(expect.objectContaining({ enabled: false }))
     })
 
-    it('re-throws InternalFlowiseError from the repo', async () => {
-        const err = new InternalFlowiseError(500, 'db error')
+    it('re-throws InternalAccelanceError from the repo', async () => {
+        const err = new InternalAccelanceError(500, 'db error')
         mockRepo.findOne.mockRejectedValue(err)
 
         await expect(scheduleService.createOrUpdateSchedule(baseInput)).rejects.toThrow('db error')
     })
 
-    it('wraps unexpected errors in InternalFlowiseError', async () => {
+    it('wraps unexpected errors in InternalAccelanceError', async () => {
         mockRepo.findOne.mockRejectedValue(new Error('unexpected'))
 
         await expect(scheduleService.createOrUpdateSchedule(baseInput)).rejects.toMatchObject({
@@ -233,7 +233,7 @@ describe('deleteScheduleForTarget', () => {
         expect(result).toBeUndefined()
     })
 
-    it('throws InternalFlowiseError on repo failure', async () => {
+    it('throws InternalAccelanceError on repo failure', async () => {
         mockRepo.findOne.mockRejectedValue(new Error('db fail'))
 
         await expect(scheduleService.deleteScheduleForTarget('flow-1', ScheduleTriggerType.AGENTFLOW, 'ws-1')).rejects.toMatchObject({
@@ -268,7 +268,7 @@ describe('getEnabledSchedulesBatch', () => {
         expect(mockRepo.find).toHaveBeenCalledWith(expect.objectContaining({ skip: 50, take: 25 }))
     })
 
-    it('throws InternalFlowiseError on failure', async () => {
+    it('throws InternalAccelanceError on failure', async () => {
         mockRepo.find.mockRejectedValue(new Error('db fail'))
 
         await expect(scheduleService.getEnabledSchedulesBatch()).rejects.toMatchObject({ statusCode: 500 })
@@ -383,7 +383,7 @@ describe('getScheduleStatus', () => {
         expect(result.reason).toMatch(/Could not parse/)
     })
 
-    it('throws InternalFlowiseError on unexpected DB error', async () => {
+    it('throws InternalAccelanceError on unexpected DB error', async () => {
         mockRepo.findOne.mockRejectedValue(new Error('db fail'))
 
         await expect(scheduleService.getScheduleStatus('flow-1', 'ws-1')).rejects.toMatchObject({ statusCode: 500 })
@@ -440,7 +440,7 @@ describe('toggleScheduleEnabled', () => {
         await expect(scheduleService.toggleScheduleEnabled('flow-1', 'ws-1', true)).rejects.toMatchObject({ statusCode: 400 })
     })
 
-    it('throws InternalFlowiseError on unexpected repo error', async () => {
+    it('throws InternalAccelanceError on unexpected repo error', async () => {
         mockRepo.findOne.mockRejectedValue(new Error('db fail'))
 
         await expect(scheduleService.toggleScheduleEnabled('flow-1', 'ws-1', false)).rejects.toMatchObject({ statusCode: 500 })
@@ -611,15 +611,15 @@ describe('getTriggerLogs', () => {
         )
     })
 
-    it('wraps DB errors in InternalFlowiseError', async () => {
+    it('wraps DB errors in InternalAccelanceError', async () => {
         ;(mockRepo.findAndCount as jest.Mock).mockRejectedValue(new Error('db down'))
 
         await expect(scheduleService.getTriggerLogs('flow-1', 'ws-1')).rejects.toMatchObject({
             statusCode: 500,
             message: expect.stringContaining('getTriggerLogs')
         })
-        // Use InternalFlowiseError to verify the thrown type
-        await expect(scheduleService.getTriggerLogs('flow-1', 'ws-1')).rejects.toBeInstanceOf(InternalFlowiseError)
+        // Use InternalAccelanceError to verify the thrown type
+        await expect(scheduleService.getTriggerLogs('flow-1', 'ws-1')).rejects.toBeInstanceOf(InternalAccelanceError)
     })
 })
 
@@ -700,9 +700,9 @@ describe('deleteTriggerLogs', () => {
         expect(mockDeleteExecutions).not.toHaveBeenCalled()
     })
 
-    it('wraps DB errors in InternalFlowiseError', async () => {
+    it('wraps DB errors in InternalAccelanceError', async () => {
         ;(mockRepo.find as jest.Mock).mockRejectedValue(new Error('db down'))
 
-        await expect(scheduleService.deleteTriggerLogs('flow-1', 'ws-1', ['log-1'])).rejects.toBeInstanceOf(InternalFlowiseError)
+        await expect(scheduleService.deleteTriggerLogs('flow-1', 'ws-1', ['log-1'])).rejects.toBeInstanceOf(InternalAccelanceError)
     })
 })
