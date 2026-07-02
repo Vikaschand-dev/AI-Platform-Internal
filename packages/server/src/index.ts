@@ -379,7 +379,7 @@ export class App {
             }
             await Promise.all(removePromises)
         } catch (e) {
-            logger.error(`❌[server]: Flowise Server shut down error: ${e}`)
+            logger.error(`❌[server]: Accelance Server shut down error: ${e}`)
         }
     }
 }
@@ -397,7 +397,7 @@ export async function start(): Promise<void> {
     await serverApp.config()
 
     server.listen(port, host, () => {
-        logger.info(`⚡️ [server]: Flowise Server is listening at ${host ? 'http://' + host : ''}:${port}`)
+        logger.info(`⚡️ [server]: Accelance Server is listening at ${host ? 'http://' + host : ''}:${port}`)
     })
 }
 

@@ -15,7 +15,7 @@ import { UsageCacheManager } from '../UsageCacheManager'
 import { ExpressAdapter } from '@bull-board/express'
 import { IdentityManager } from '../IdentityManager'
 
-const QUEUE_NAME = process.env.QUEUE_NAME || 'flowise-queue'
+const QUEUE_NAME = process.env.QUEUE_NAME || 'accelance-queue'
 
 type QUEUE_TYPE = 'prediction' | 'upsert' | 'schedule'
 

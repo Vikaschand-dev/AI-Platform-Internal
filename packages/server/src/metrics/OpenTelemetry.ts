@@ -48,7 +48,7 @@ export class OpenTelemetry implements IMetricsProvider {
             const flowiseVersion = await getVersion()
 
             this.resource = new Resource({
-                [ATTR_SERVICE_NAME]: process.env.METRICS_SERVICE_NAME || 'FlowiseAI',
+                [ATTR_SERVICE_NAME]: process.env.METRICS_SERVICE_NAME || 'Accelance',
                 [ATTR_SERVICE_VERSION]: flowiseVersion.version // Version as a label
             })
 
@@ -104,7 +104,7 @@ export class OpenTelemetry implements IMetricsProvider {
 
             this.meterProvider = new MeterProvider({ resource: this.resource, readers: [this.metricReader] })
 
-            const meter = this.meterProvider.getMeter('flowise-metrics')
+            const meter = this.meterProvider.getMeter('accelance-metrics')
             // look at the FLOWISE_COUNTER enum in Interface.Metrics.ts and get all values
             // for each counter in the enum, create a new promClient.Counter and add it to the registry
             const enumEntries = Object.entries(ACCELANCE_METRIC_COUNTERS)
@@ -132,7 +132,7 @@ export class OpenTelemetry implements IMetricsProvider {
                 // Add version gauge if not already created
                 if (!createdMetrics.has('accelance_version')) {
                     const versionGuage = meter.createGauge('accelance_version', {
-                        description: 'Flowise version'
+                        description: 'Accelance version'
                     })
                     // remove the last dot from the version string, e.g. 2.1.3 -> 2.13 (gauge needs a number - float)
                     const formattedVersion = flowiseVersion.version.replace(/\.(\d+)$/, '$1')

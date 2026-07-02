@@ -7,7 +7,7 @@ import { getOrCreateStoredSecret } from '../../utils'
 const WEAK_DEFAULTS: Record<string, string> = {
     JWT_AUTH_TOKEN_SECRET: 'AABBCCDDAABBCCDDAABBCCDDAABBCCDDAABBCCDD',
     JWT_REFRESH_TOKEN_SECRET: 'AABBCCDDAABBCCDDAABBCCDDAABBCCDDAABBCCDD',
-    EXPRESS_SESSION_SECRET: 'flowise',
+    EXPRESS_SESSION_SECRET: 'accelance',
     TOKEN_HASH_SECRET: 'popcorn'
 }
 
@@ -58,14 +58,14 @@ export async function initAuthSecrets(): Promise<void> {
         envKey: 'JWT_ISSUER',
         fileName: 'jwt_issuer.key',
         awsSecretIdSuffix: 'JWTIssuer',
-        defaultValueForNew: 'flowise'
+        defaultValueForNew: 'accelance'
     })
 
     jwtAudience = await getOrCreateStoredSecret({
         envKey: 'JWT_AUDIENCE',
         fileName: 'jwt_audience.key',
         awsSecretIdSuffix: 'JWTAudience',
-        defaultValueForNew: 'flowise'
+        defaultValueForNew: 'accelance'
     })
 }
 

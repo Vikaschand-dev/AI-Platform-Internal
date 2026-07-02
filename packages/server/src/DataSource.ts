@@ -84,7 +84,7 @@ export const init = async (): Promise<void> => {
                 poolErrorHandler: (err) => {
                     logger.error(`Database pool error: ${JSON.stringify(err)}`)
                 },
-                applicationName: 'Flowise'
+                applicationName: 'Accelance'
             })
             break
         default:
